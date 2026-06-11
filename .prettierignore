@@ -1,0 +1,30 @@
+**/dist/**
+**/.expo/**
+**/node_modules/**
+**/coverage/**
+pnpm-lock.yaml
+# Hand-authored prose docs (manual table/line formatting; do not reflow)
+docs/**
+# Legacy Apps Script files at repo root
+Admin.js
+Code.js
+Config.js
+Docs.js
+Guides.js
+Kids.js
+Leap.js
+Logging.js
+Messages.js
+Milestones.js
+OptIn.js
+Parents.js
+Questions.js
+Sheets.js
+SmsFlow.js
+Triggers.js
+Twilio.js
+Utils.js
+WebApp.js
+daily.js
+knowledge.js
+knowledge_generator.js

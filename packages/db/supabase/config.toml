@@ -1,0 +1,18 @@
+# Supabase local config for the DaybyDay project.
+# Run `supabase start` then `supabase db reset` to apply migrations + seed locally.
+project_id = "daybyday"
+
+[db]
+port = 54322
+major_version = 15
+
+[api]
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+
+[studio]
+port = 54323
+
+[auth]
+enable_signup = true
