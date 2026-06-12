@@ -15,7 +15,10 @@ Deploy the **API first** (Vercel needs its URL).
 ## 1. API → Railway
 
 1. Railway dashboard → **New Project** → **Deploy from GitHub repo** → pick `Bartoses/daybyday`.
-2. Railway detects the root `Dockerfile` automatically. (If it asks, builder = Dockerfile.)
+2. **Use a single service** (delete any extra `@daybyday/mobile` / `@daybyday/import`
+   services Railway auto-creates — only the API runs here). The root `railway.json`
+   builds with Nixpacks and starts via `pnpm --filter @daybyday/api start` (which runs
+   the API with `tsx` — no separate build step).
 3. Open the service → **Variables** → add:
    - `SUPABASE_URL` = `https://wclfupgqlrtxptmhggbm.supabase.co`
    - `SUPABASE_ANON_KEY` = (the anon key from `.env`)
