@@ -27,6 +27,7 @@ export default function Today() {
   const [actionBusy, setActionBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<boolean | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   const loadCard = useCallback(async (c: Child) => {
     setError(null);
@@ -34,6 +35,7 @@ export default function Today() {
     try {
       setCard(await api.feedToday(c.id));
       setFeedback(null);
+      setExpanded(false);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not load today's card.");
     } finally {
@@ -68,6 +70,7 @@ export default function Today() {
     try {
       setCard(await api.quickAction(child.id, requestType));
       setFeedback(null);
+      setExpanded(false);
     } catch (e) {
       if (e instanceof ApiError && e.status === 402) {
         setError("You've reached today's free tips. Upgrade for unlimited.");
@@ -236,9 +239,53 @@ export default function Today() {
               </Text>
             </View>
 
-            {card.when_to_consult_doctor ? (
-              <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
-                ⚕︎ {card.when_to_consult_doctor}
+            {/* Reflective prompt — universal, conversational, teases the assistant */}
+            {card.follow_up_prompt ? (
+              <View style={{ gap: spacing.xs }}>
+                <Text
+                  style={{
+                    fontSize: font.tiny,
+                    fontWeight: "800",
+                    color: colors.accent,
+                    letterSpacing: 0.5,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Parents often wonder
+                </Text>
+                <Text style={{ fontSize: font.body, color: colors.text, lineHeight: 23 }}>
+                  “{card.follow_up_prompt}”
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Expandable "Learn more" — only when there's extra depth to reveal */}
+            {hasMore(card) ? (
+              <View style={{ gap: spacing.sm }}>
+                <Pressable onPress={() => setExpanded((v) => !v)}>
+                  <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.primary }}>
+                    {expanded ? "Show less" : "Learn more"}
+                  </Text>
+                </Pressable>
+                {expanded ? (
+                  <View style={{ gap: spacing.md }}>
+                    {card.signs_of_healthy_development ? (
+                      <LearnMoreRow label="Signs it's going well" body={card.signs_of_healthy_development} />
+                    ) : null}
+                    {card.common_misunderstanding ? (
+                      <LearnMoreRow label="A common myth" body={card.common_misunderstanding} />
+                    ) : null}
+                    {card.when_to_consult_doctor ? (
+                      <LearnMoreRow label="When to check with your doctor" body={card.when_to_consult_doctor} />
+                    ) : null}
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+
+            {card.development_focus ? (
+              <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>
+                ✦ Supports {card.development_focus}
               </Text>
             ) : null}
 
@@ -287,6 +334,22 @@ export default function Today() {
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+/** Whether the card has extra depth worth an expandable section. */
+function hasMore(card: FeedCard): boolean {
+  return Boolean(
+    card.signs_of_healthy_development || card.common_misunderstanding || card.when_to_consult_doctor,
+  );
+}
+
+function LearnMoreRow({ label, body }: { label: string; body: string }) {
+  return (
+    <View style={{ gap: 2 }}>
+      <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.text }}>{label}</Text>
+      <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 21 }}>{body}</Text>
+    </View>
   );
 }
 

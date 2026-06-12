@@ -77,11 +77,19 @@ export const FeedCard = z.object({
   date: z.string(),
   tip_id: z.string(),
   category: Category,
-  stage: StageKey.nullable(),
+  // Carries a human-readable stage label (e.g. "Newborn"), not the enum key.
+  stage: z.string().nullable(),
   insight: z.string(),
   action_tip: z.string(),
   reassurance: z.string(),
   when_to_consult_doctor: z.string().nullable(),
+  // Richer content for the expandable "Learn more" reading experience.
+  signs_of_healthy_development: z.string().nullable(),
+  common_misunderstanding: z.string().nullable(),
+  development_focus: z.string().nullable(),
+  follow_up_prompt: z.string().nullable(),
+  youtube_title: z.string().nullable(),
+  youtube_url: z.string().nullable(),
   sources: z.array(z.string()),
   saved: z.boolean(),
 });

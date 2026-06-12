@@ -17,6 +17,12 @@ interface ContentRow extends Candidate {
   action_tip: string;
   reassurance: string;
   when_to_consult_doctor: string | null;
+  signs_of_healthy_development: string | null;
+  common_misunderstanding: string | null;
+  development_focus: string | null;
+  follow_up_prompt: string | null;
+  youtube_resource_title: string | null;
+  youtube_resource_link: string | null;
 }
 
 export interface ChildRow {
@@ -37,12 +43,18 @@ export interface FeedCardResult {
   action_tip: string;
   reassurance: string;
   when_to_consult_doctor: string | null;
+  signs_of_healthy_development: string | null;
+  common_misunderstanding: string | null;
+  development_focus: string | null;
+  follow_up_prompt: string | null;
+  youtube_title: string | null;
+  youtube_url: string | null;
   sources: string[];
   saved: boolean;
 }
 
 const CONTENT_COLUMNS =
-  "tip_id, category, rotation_group, stage, age_min_days, age_max_days, priority_weight, cooldown_days, difficulty_level, active, insight, action_tip, reassurance, when_to_consult_doctor";
+  "tip_id, category, rotation_group, stage, age_min_days, age_max_days, priority_weight, cooldown_days, difficulty_level, active, insight, action_tip, reassurance, when_to_consult_doctor, signs_of_healthy_development, common_misunderstanding, development_focus, follow_up_prompt, youtube_resource_title, youtube_resource_link";
 
 /** Stage label for an age, matching the legacy getStageForAgeDays output. */
 function stageLabelForAge(ageDays: number): string | null {
@@ -118,6 +130,12 @@ function toCard(child: ChildRow, content: ContentRow, ageDays: number, now: Date
     action_tip: rendered.action_tip,
     reassurance: rendered.reassurance,
     when_to_consult_doctor: content.when_to_consult_doctor,
+    signs_of_healthy_development: content.signs_of_healthy_development,
+    common_misunderstanding: content.common_misunderstanding,
+    development_focus: content.development_focus,
+    follow_up_prompt: content.follow_up_prompt,
+    youtube_title: content.youtube_resource_title,
+    youtube_url: content.youtube_resource_link,
     sources: [],
     saved: false,
   };
