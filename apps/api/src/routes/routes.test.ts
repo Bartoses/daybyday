@@ -26,6 +26,9 @@ describe("EPIC 4 routes are auth-gated", () => {
     ["GET", "/v1/feed/today?child_id=00000000-0000-0000-0000-000000000000"],
     ["POST", "/v1/feed/quick-action", { child_id: "00000000-0000-0000-0000-000000000000", request_type: "sleep" }],
     ["POST", "/v1/feed/tip_123/feedback", { child_id: "00000000-0000-0000-0000-000000000000", helpful: true }],
+    ["GET", "/v1/faq?child_id=00000000-0000-0000-0000-000000000000"],
+    ["POST", "/v1/questions", { child_id: "00000000-0000-0000-0000-000000000000", question: "why" }],
+    ["GET", "/v1/questions"],
   ];
 
   it.each(cases)("%s %s -> 401 without a bearer token", async (method, url, payload) => {

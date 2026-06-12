@@ -4,8 +4,9 @@ import { router } from "expo-router";
 import type { FeedCard, MeResponse, RequestType } from "@daybyday/schemas";
 import { api, ApiError } from "../src/api-client";
 import { useAuth } from "../src/auth";
-import { Button, Card, Pill, Screen } from "../src/components/ui";
-import { colors, font, spacing, radius, categoryLabels } from "../src/theme";
+import { Button, Card, Screen } from "../src/components/ui";
+import { TipCard } from "../src/components/TipCard";
+import { colors, font, spacing, radius } from "../src/theme";
 
 type Child = MeResponse["children"][number];
 
@@ -26,16 +27,12 @@ export default function Today() {
   const [cardLoading, setCardLoading] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<boolean | null>(null);
-  const [expanded, setExpanded] = useState(false);
 
   const loadCard = useCallback(async (c: Child) => {
     setError(null);
     setCardLoading(true);
     try {
       setCard(await api.feedToday(c.id));
-      setFeedback(null);
-      setExpanded(false);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not load today's card.");
     } finally {
@@ -69,8 +66,6 @@ export default function Today() {
     setError(null);
     try {
       setCard(await api.quickAction(child.id, requestType));
-      setFeedback(null);
-      setExpanded(false);
     } catch (e) {
       if (e instanceof ApiError && e.status === 402) {
         setError("You've reached today's free tips. Upgrade for unlimited.");
@@ -84,7 +79,6 @@ export default function Today() {
 
   async function sendFeedback(helpful: boolean) {
     if (!card || !child) return;
-    setFeedback(helpful);
     try {
       await api.feedback(card.tip_id, child.id, helpful);
     } catch {
@@ -113,7 +107,6 @@ export default function Today() {
           alignSelf: "center",
         }}
       >
-        {/* Header */}
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <Text style={{ fontSize: font.heading, fontWeight: "800", color: colors.text }}>
             {greeting()}
@@ -129,7 +122,6 @@ export default function Today() {
           </View>
         </View>
 
-        {/* Child switcher (only when more than one) */}
         {children.length > 1 && (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
             {children.map((c) => {
@@ -147,13 +139,7 @@ export default function Today() {
                     backgroundColor: active ? colors.primary : colors.surface,
                   }}
                 >
-                  <Text
-                    style={{
-                      color: active ? colors.onPrimary : colors.text,
-                      fontWeight: active ? "700" : "500",
-                      fontSize: font.small,
-                    }}
-                  >
+                  <Text style={{ color: active ? colors.onPrimary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
                     {c.name}
                   </Text>
                 </Pressable>
@@ -162,7 +148,6 @@ export default function Today() {
           </ScrollView>
         )}
 
-        {/* Active child context line */}
         {child ? (
           <Text style={{ fontSize: font.small, color: colors.textMuted, marginTop: -spacing.sm }}>
             {child.name}
@@ -182,142 +167,34 @@ export default function Today() {
             <ActivityIndicator color={colors.primary} />
           </Card>
         ) : card ? (
-          <Card style={{ gap: spacing.lg, opacity: cardLoading ? 0.6 : 1 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <Pill label={categoryLabels[card.category] ?? card.category} />
-              {card.stage ? (
-                <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>{card.stage}</Text>
-              ) : null}
-            </View>
-
-            <Text
-              style={{
-                fontSize: 26,
-                fontWeight: "800",
-                color: colors.text,
-                lineHeight: 34,
-                letterSpacing: -0.3,
-              }}
-            >
-              {card.insight}
-            </Text>
-
-            {/* Action block — accented so the "do this" stands out */}
-            <View
-              style={{
-                borderLeftWidth: 3,
-                borderLeftColor: colors.primary,
-                paddingLeft: spacing.lg,
-                gap: spacing.xs,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: font.tiny,
-                  fontWeight: "800",
-                  color: colors.primary,
-                  letterSpacing: 0.5,
-                  textTransform: "uppercase",
-                }}
-              >
-                Try this today
-              </Text>
-              <Text style={{ fontSize: font.heading, color: colors.text, lineHeight: 27 }}>
-                {card.action_tip}
-              </Text>
-            </View>
-
-            <View
-              style={{
-                backgroundColor: colors.surfaceAlt,
-                borderRadius: radius.button,
-                padding: spacing.lg,
-              }}
-            >
-              <Text style={{ fontSize: font.body, color: colors.text, fontStyle: "italic", lineHeight: 24 }}>
-                {card.reassurance}
-              </Text>
-            </View>
-
-            {/* Reflective prompt — universal, conversational, teases the assistant */}
-            {card.follow_up_prompt ? (
-              <View style={{ gap: spacing.xs }}>
-                <Text
-                  style={{
-                    fontSize: font.tiny,
-                    fontWeight: "800",
-                    color: colors.accent,
-                    letterSpacing: 0.5,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Parents often wonder
-                </Text>
-                <Text style={{ fontSize: font.body, color: colors.text, lineHeight: 23 }}>
-                  “{card.follow_up_prompt}”
-                </Text>
-              </View>
-            ) : null}
-
-            {/* Expandable "Learn more" — only when there's extra depth to reveal */}
-            {hasMore(card) ? (
-              <View style={{ gap: spacing.sm }}>
-                <Pressable onPress={() => setExpanded((v) => !v)}>
-                  <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.primary }}>
-                    {expanded ? "Show less" : "Learn more"}
-                  </Text>
-                </Pressable>
-                {expanded ? (
-                  <View style={{ gap: spacing.md }}>
-                    {card.signs_of_healthy_development ? (
-                      <LearnMoreRow label="Signs it's going well" body={card.signs_of_healthy_development} />
-                    ) : null}
-                    {card.common_misunderstanding ? (
-                      <LearnMoreRow label="A common myth" body={card.common_misunderstanding} />
-                    ) : null}
-                    {card.when_to_consult_doctor ? (
-                      <LearnMoreRow label="When to check with your doctor" body={card.when_to_consult_doctor} />
-                    ) : null}
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
-
-            {card.development_focus ? (
-              <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>
-                ✦ Supports {card.development_focus}
-              </Text>
-            ) : null}
-
-            <View
-              style={{
-                flexDirection: "row",
-                gap: spacing.sm,
-                marginTop: spacing.xs,
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-                paddingTop: spacing.md,
-              }}
-            >
-              <FeedbackChip
-                label="♥  Helpful"
-                active={feedback === true}
-                activeColor={colors.success}
-                onPress={() => sendFeedback(true)}
-              />
-              <FeedbackChip
-                label="Not for us"
-                active={feedback === false}
-                activeColor={colors.danger}
-                onPress={() => sendFeedback(false)}
-              />
-            </View>
-          </Card>
+          <TipCard key={card.tip_id} card={card} onFeedback={sendFeedback} dimmed={cardLoading} />
         ) : (
           <Card>
             <Text style={{ color: colors.textMuted }}>No tip available for this age yet.</Text>
           </Card>
         )}
+
+        {/* Ask a question */}
+        {child ? (
+          <Pressable
+            onPress={() => router.push({ pathname: "/ask", params: { child_id: child.id } })}
+            style={{
+              borderRadius: radius.button,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              padding: spacing.lg,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: font.body, color: colors.text, fontWeight: "600" }}>
+              Ask about {child.name}…
+            </Text>
+            <Text style={{ color: colors.primary, fontSize: font.body }}>→</Text>
+          </Pressable>
+        ) : null}
 
         {/* Quick actions */}
         <View style={{ gap: spacing.sm }}>
@@ -334,52 +211,6 @@ export default function Today() {
         </View>
       </ScrollView>
     </Screen>
-  );
-}
-
-/** Whether the card has extra depth worth an expandable section. */
-function hasMore(card: FeedCard): boolean {
-  return Boolean(
-    card.signs_of_healthy_development || card.common_misunderstanding || card.when_to_consult_doctor,
-  );
-}
-
-function LearnMoreRow({ label, body }: { label: string; body: string }) {
-  return (
-    <View style={{ gap: 2 }}>
-      <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.text }}>{label}</Text>
-      <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 21 }}>{body}</Text>
-    </View>
-  );
-}
-
-function FeedbackChip({
-  label,
-  active,
-  activeColor,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  activeColor: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
-        borderRadius: radius.pill,
-        borderWidth: 1,
-        borderColor: active ? activeColor : colors.border,
-        backgroundColor: active ? colors.surfaceAlt : "transparent",
-      }}
-    >
-      <Text style={{ fontSize: font.small, color: active ? activeColor : colors.textMuted, fontWeight: active ? "700" : "500" }}>
-        {label}
-      </Text>
-    </Pressable>
   );
 }
 

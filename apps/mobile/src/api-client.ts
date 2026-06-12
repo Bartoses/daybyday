@@ -101,6 +101,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ child_id: childId, helpful }),
     }),
+
+  faq: (childId: string) =>
+    request<{ questions: string[] }>(`/v1/faq?child_id=${encodeURIComponent(childId)}`),
+
+  ask: (childId: string, question: string) =>
+    request<{ question_id: string; matched: boolean; answer: FeedCard | null }>("/v1/questions", {
+      method: "POST",
+      body: JSON.stringify({ child_id: childId, question }),
+    }),
 };
 
 export { ApiError };

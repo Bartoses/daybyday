@@ -6,6 +6,7 @@ import { makeServiceClient } from "./supabase.js";
 import { accountRoutes } from "./routes/account.js";
 import { childrenRoutes } from "./routes/children.js";
 import { feedRoutes } from "./routes/feed.js";
+import { questionRoutes } from "./routes/questions.js";
 
 /**
  * Builds the Fastify app. Health + guarded SMS webhook + the EPIC 4 feature
@@ -59,6 +60,7 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
   app.register(accountRoutes);
   app.register(childrenRoutes);
   app.register(feedRoutes);
+  app.register(questionRoutes);
 
   return app;
 }
