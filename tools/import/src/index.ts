@@ -1,15 +1,23 @@
 /**
  * CLI entry point for the Knowledge Sheet → content_items importer.
  *
- * Usage:
- *   pnpm --filter @daybyday/import run -- --input /path/to/knowledge.csv
- *   pnpm --filter @daybyday/import run -- --input /path/to/knowledge.csv --parity
- *   pnpm --filter @daybyday/import run -- --input /path/to/knowledge.csv --dry-run
+ * Usage (from repo root):
+ *   pnpm --filter @daybyday/import import -- --input /path/to/knowledge.csv
+ *   pnpm --filter @daybyday/import import -- --input /path/to/knowledge.csv --parity
+ *   pnpm --filter @daybyday/import import -- --input /path/to/knowledge.csv --dry-run
  *
- * Requires env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (loaded from .env at root).
+ * Requires env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (loaded from the
+ * repo-root .env regardless of the package cwd).
  */
 
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+// Load the repo-root .env (../../.env from tools/import/src), not the package cwd.
+const here = dirname(fileURLToPath(import.meta.url));
+loadEnv({ path: resolve(here, "../../../.env") });
+
 import { createClient } from "@supabase/supabase-js";
 import { readCsvFile } from "./reader.js";
 import { upsertContentItems, printParityReport } from "./upsert.js";

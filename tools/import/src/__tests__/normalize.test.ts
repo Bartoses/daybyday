@@ -19,33 +19,47 @@ describe("canonicalizeCategory", () => {
     // Feeding
     ["feeding", "feeding"],
     ["feeding tip", "feeding"],
-    // Development variants
+    // Development = motor / sensory / physical / milestones domain
     ["development", "development"],
     ["development tip", "development"],
     ["motor development", "development"],
     ["motor", "development"],
-    ["language development", "development"],
-    ["speech development", "development"],
-    ["cognitive development", "development"],
-    // learning_play variants (GS returned "learning/play", DB uses "learning_play")
+    ["sensory", "development"],
+    ["milestones / reassurance", "development"],
+    // learning_play = language / literacy / play / cognitive
     ["learning/play", "learning_play"],
     ["learning_play", "learning_play"],
     ["learning", "learning_play"],
     ["language", "learning_play"],
+    ["language development", "learning_play"],
+    ["cognitive development", "learning_play"],
+    ["cognitive", "learning_play"],
+    ["literacy", "learning_play"],
     ["play", "learning_play"],
     ["learning and play", "learning_play"],
     ["montessori activities", "learning_play"],
     ["sensory play", "learning_play"],
-    // emotional variants (GS returned "emotional development", DB uses "emotional")
+    // emotional = social / attachment / regulation / parent support
     ["emotional development", "emotional"],
     ["emotional", "emotional"],
     ["parent emotional support", "emotional"],
     ["attachment and bonding", "emotional"],
     ["social development", "emotional"],
-    // behavior
+    ["social", "emotional"],
+    ["friendships", "emotional"],
+    ["resilience", "emotional"],
+    ["parent support", "emotional"],
+    // behavior = tantrums / discipline / screen time
     ["behavior", "behavior"],
+    ["tantrums", "behavior"],
+    ["screen time", "behavior"],
     // safety
     ["safety", "safety"],
+    ["safety / choking", "safety"],
+    // compounds resolve on the primary token
+    ["sleep / safety", "sleep"],
+    ["feeding_attachment", "feeding"],
+    ["routines / sleep", "behavior"],
     // fallback aliases
     ["today's next step", "development"],
     ["general", "development"],

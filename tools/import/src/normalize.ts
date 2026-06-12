@@ -76,60 +76,56 @@ export function getCell(
 }
 
 /**
- * Port of canonicalizeTopic_ but maps directly to the DB enum.
- * The GS function returned "learning/play" and "emotional development"; we map those
- * to "learning_play" and "emotional" to satisfy the content_items check constraint.
+ * Maps a raw sheet category to one of the 7 DB enum categories.
+ *
+ * The Knowledge sheet uses ~130 distinct category strings — bare developmental
+ * domains ("motor", "social", "language"), product topics ("screen time",
+ * "friendships"), and compounds ("sleep / safety", "feeding_attachment"). The
+ * 7-value enum (sleep/feeding/development/learning_play/emotional/behavior/safety)
+ * is fixed, so we group by developmental domain:
+ *   - motor / sensory / physical / milestones      -> development
+ *   - language / literacy / reading / play / cognitive -> learning_play
+ *   - social / attachment / regulation / anxiety / parent support -> emotional
+ *   - tantrums / discipline / screen time           -> behavior
+ *
+ * Compounds resolve on their primary (first) token, e.g. "sleep / safety" -> sleep.
  */
 export function canonicalizeCategory(raw: string): DbCategory {
-  const normalized = clean(raw).toLowerCase();
+  let n = clean(raw).toLowerCase();
+  if (!n) return "development";
 
-  if (!normalized) return "development";
+  // Compounds: use the primary token ("sleep / safety" -> "sleep").
+  if (n.includes("/")) n = (n.split("/")[0] ?? "").trim();
+  // Normalize underscores so "feeding_attachment" matches like "feeding attachment".
+  n = n.replace(/_/g, " ").trim();
+  if (!n) return "development";
 
-  if (normalized === "sleep" || normalized === "sleep tip") return "sleep";
+  // Exact canonical names first.
+  if (n === "sleep") return "sleep";
+  if (n === "feeding") return "feeding";
+  if (n === "behavior") return "behavior";
+  if (n === "safety") return "safety";
+  if (n === "emotional") return "emotional";
+  if (n === "development") return "development";
+  if (n === "learning play" || n === "learning and play") return "learning_play";
 
-  if (normalized === "feeding" || normalized === "feeding tip") return "feeding";
+  const has = (...words: string[]): boolean => words.some((w) => n.includes(w));
 
-  if (
-    normalized === "development" ||
-    normalized === "development tip" ||
-    normalized === "motor development" ||
-    normalized === "motor" ||
-    normalized === "language development" ||
-    normalized === "speech development" ||
-    normalized === "cognitive development"
-  ) {
-    return "development";
+  // Order matters: safety and sleep win over more generic domains.
+  if (has("safety", "choking", "burn")) return "safety";
+  if (has("sleep")) return "sleep";
+  if (has("feeding", "solid", "allergen", "picky", "swallow", "satiety", "eating", "nursing", "breastfeed", "bottle")) {
+    return "feeding";
   }
-
-  if (
-    normalized === "learning/play" ||
-    normalized === "learning_play" ||
-    normalized === "learning" ||
-    normalized === "language" ||
-    normalized === "play" ||
-    normalized === "learning and play" ||
-    normalized === "montessori activities" ||
-    normalized === "sensory play"
-  ) {
+  if (has("tantrum", "discipline", "aggression", "behavior", "frustration", "screen time", "chore", "defian", "routine")) {
+    return "behavior";
+  }
+  if (has("language", "literacy", "reading", "story", "play", "cognitive", "montessori", "imagination", "music", "executive", "attention", "school readiness", "learning")) {
     return "learning_play";
   }
-
-  if (
-    normalized === "emotional development" ||
-    normalized === "emotional" ||
-    normalized === "parent emotional support" ||
-    normalized === "attachment and bonding" ||
-    normalized === "social development"
-  ) {
+  if (has("motor", "sensory", "physical", "mobility", "milestone")) return "development";
+  if (has("emotional", "attachment", "regulation", "crying", "anxiety", "separation", "resilience", "confidence", "mental health", "stress", "stranger", "identity", "social", "friend", "peer", "belonging", "autonomy", "independence", "parent", "caregiver", "wellbeing", "soothing", "voice", "smil", "bonding", "co-regulation")) {
     return "emotional";
-  }
-
-  if (normalized === "behavior") return "behavior";
-
-  if (normalized === "safety") return "safety";
-
-  if (normalized === "today's next step" || normalized === "general") {
-    return "development";
   }
 
   return "development";
@@ -151,8 +147,9 @@ function normalizeStage(raw: string | undefined): string | null {
 
 function normalizeKeywords(raw: string): string[] {
   if (!raw) return [];
+  // Sheet uses pipe-delimited keywords ("sleep|infant|safety"); also accept commas.
   return raw
-    .split(",")
+    .split(/[,|]/)
     .map((k) => k.trim())
     .filter(Boolean);
 }
@@ -205,8 +202,12 @@ export function normalizeRow(
 
   if (!insight || !actionTip || !reassurance) return null;
 
+  // Prefer an explicit tip_id, then the unique `id` column (stable across re-imports
+  // and reorders), then a synthesized fallback. Separate getCell calls because
+  // getCell returns the first *present header* even when its value is empty.
   const tipId =
     clean(getCell(headers, row, ["tip_id"])) ||
+    clean(getCell(headers, row, ["id"])) ||
     buildFallbackTipId(ageMin, ageMax, rawCategory, rowIndex);
 
   if (!tipId) return null;
