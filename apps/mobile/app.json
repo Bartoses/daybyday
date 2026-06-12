@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "DaybyDay",
+    "slug": "daybyday",
+    "scheme": "daybyday",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FBF9F6",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.daybyday.app"
+    },
+    "android": {
+      "package": "com.daybyday.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

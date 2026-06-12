@@ -1,36 +1,96 @@
-// Minimal typed API client seed for the Expo app. Proves the shared @daybyday/schemas
-// types compile in the mobile package too (T1.1.2 AC). The full Expo app (Expo Router,
-// screens, Supabase Auth) is scaffolded in EPIC 7 (T7.1.x).
-import { type FeedCard, type MeResponse, stageForAgeDays, type StageKey } from "@daybyday/schemas";
+// Typed API client for the Expo app. Wraps the EPIC 4 endpoints, attaching the
+// Supabase JWT to every request. Shared response types come from @daybyday/schemas.
+import {
+  type FeedCard,
+  type MeResponse,
+  type RequestType,
+  stageForAgeDays,
+  type StageKey,
+} from "@daybyday/schemas";
+import { supabase } from "./supabase";
 
-export interface ApiClientOptions {
-  baseUrl: string;
-  getToken: () => Promise<string | null>;
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8080";
+
+async function token(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
 }
 
-export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
-  async function authedFetch<T>(path: string, init?: RequestInit): Promise<T> {
-    const token = await getToken();
-    const res = await fetch(`${baseUrl}${path}`, {
-      ...init,
-      headers: {
-        "content-type": "application/json",
-        ...(token ? { authorization: `Bearer ${token}` } : {}),
-        ...(init?.headers ?? {}),
-      },
-    });
-    if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
-    return (await res.json()) as T;
+class ApiError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+  ) {
+    super(message);
   }
-
-  return {
-    me: () => authedFetch<MeResponse>("/v1/me"),
-    feedToday: (childId: string) =>
-      authedFetch<FeedCard>(`/v1/feed/today?child_id=${encodeURIComponent(childId)}`),
-  };
 }
 
-/** Re-export a shared helper so the UI can render stage badges without a round-trip. */
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const t = await token();
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "content-type": "application/json",
+      ...(t ? { authorization: `Bearer ${t}` } : {}),
+      ...(init?.headers ?? {}),
+    },
+  });
+
+  if (res.status === 204) return undefined as T;
+
+  const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) {
+    const err = (body.error ?? {}) as { code?: string; message?: string };
+    throw new ApiError(res.status, err.code ?? "INTERNAL", err.message ?? `API ${res.status}`);
+  }
+  return body as T;
+}
+
+export interface BootstrapInput {
+  name: string;
+  timezone?: string;
+  focus_area?: "daily_guidance" | "sleep_support" | "big_feelings";
+  sms_opt_in?: boolean;
+}
+
+export const api = {
+  bootstrap: (input: BootstrapInput) =>
+    request<{ parent_id: string; onboarding_step: string }>("/v1/account/bootstrap", {
+      method: "POST",
+      body: JSON.stringify({ timezone: "America/Denver", sms_opt_in: false, ...input }),
+    }),
+
+  me: () => request<MeResponse>("/v1/me"),
+
+  createChild: (input: { name: string; birthdate?: string; due_date?: string; gender?: string }) =>
+    request<MeResponse["children"][number]>("/v1/children", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  completeOnboarding: () =>
+    request<{ onboarding_step: string }>("/v1/onboarding/complete", { method: "POST" }),
+
+  feedToday: (childId: string) =>
+    request<FeedCard>(`/v1/feed/today?child_id=${encodeURIComponent(childId)}`),
+
+  quickAction: (childId: string, requestType: RequestType) =>
+    request<FeedCard>("/v1/feed/quick-action", {
+      method: "POST",
+      body: JSON.stringify({ child_id: childId, request_type: requestType }),
+    }),
+
+  feedback: (tipId: string, childId: string, helpful: boolean) =>
+    request<void>(`/v1/feed/${encodeURIComponent(tipId)}/feedback`, {
+      method: "POST",
+      body: JSON.stringify({ child_id: childId, helpful }),
+    }),
+};
+
+export { ApiError };
+
+/** Re-export so the UI can render stage badges without a round-trip. */
 export function stageBadge(ageDays: number): StageKey | null {
   return stageForAgeDays(ageDays);
 }
