@@ -105,7 +105,10 @@ export default function Settings() {
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text }}>Settings</Text>
-          <Text onPress={() => router.back()} style={{ color: colors.primary, fontSize: font.small }}>
+          <Text
+            onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))}
+            style={{ color: colors.primary, fontSize: font.small }}
+          >
             Done
           </Text>
         </View>

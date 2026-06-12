@@ -91,7 +91,10 @@ export default function Ask() {
           <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text }}>
             Ask{child ? ` about ${child.name}` : ""}
           </Text>
-          <Text onPress={() => router.back()} style={{ color: colors.primary, fontSize: font.small }}>
+          <Text
+            onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))}
+            style={{ color: colors.primary, fontSize: font.small }}
+          >
             Done
           </Text>
         </View>

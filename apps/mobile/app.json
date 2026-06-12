@@ -7,16 +7,36 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#FBF9F6",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FBF9F6"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.daybyday.app"
     },
     "android": {
-      "package": "com.daybyday.app"
+      "package": "com.daybyday.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6B8F71"
+      }
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/favicon.png",
+      "name": "DaybyDay",
+      "shortName": "DaybyDay",
+      "description": "The parenting companion that grows with your family, one day at a time.",
+      "themeColor": "#6B8F71",
+      "backgroundColor": "#FBF9F6",
+      "display": "standalone",
+      "startUrl": "/",
+      "lang": "en",
+      "orientation": "portrait"
     },
     "plugins": ["expo-router"],
     "experiments": {

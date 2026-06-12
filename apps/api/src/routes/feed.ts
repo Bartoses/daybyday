@@ -117,32 +117,9 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
       const now = new Date();
       const today = dateKey(now);
 
-      // Entitlement: free plan gets the daily card + 1 quick action/day.
-      const { data: sub } = await app.db
-        .from("subscriptions")
-        .select("plan, status")
-        .eq("parent_id", parentId)
-        .maybeSingle();
-      const isPaid = sub?.plan === "premium" || sub?.plan === "family";
-
-      if (!isPaid) {
-        const { count } = await app.db
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("parent_id", parentId)
-          .eq("child_id", child.id)
-          .eq("send_date", today)
-          .eq("message_type", "followup");
-        if ((count ?? 0) >= 1) {
-          return reply.code(402).send({
-            error: {
-              code: "PAYMENT_REQUIRED",
-              message: "Upgrade for unlimited tips",
-              details: { feature: "quick_actions", plan: "premium" },
-            },
-          });
-        }
-      }
+      // Monetization disabled for now — every account gets unlimited quick
+      // actions. The free-tier daily cap (1 follow-up/day → 402) lives in git
+      // history and can be re-enabled when billing ships.
 
       const category = categoryForRequest(parsed.data.request_type);
       const card = await selectFeedCard(app.db, parentId, child, {
