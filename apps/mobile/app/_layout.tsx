@@ -22,6 +22,7 @@ export default function RootLayout() {
           <Stack.Screen name="sign-in" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ title: "Welcome" }} />
           <Stack.Screen name="today" options={{ title: "Today" }} />
+          <Stack.Screen name="settings" options={{ title: "Settings" }} />
         </Stack>
       </AuthProvider>
     </SafeAreaProvider>

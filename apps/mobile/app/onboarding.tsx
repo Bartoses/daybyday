@@ -1,47 +1,82 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { api, ApiError } from "../src/api-client";
 import { Button, Field, Screen } from "../src/components/ui";
-import { colors, font, spacing } from "../src/theme";
+import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
+import { colors, font, radius, spacing } from "../src/theme";
 
-type Step = "parent" | "child" | "focus";
+type Step = "parent" | "children" | "focus";
 
-const FOCUS_OPTIONS: Array<{ key: "daily_guidance" | "sleep_support" | "big_feelings"; label: string }> = [
-  { key: "daily_guidance", label: "Daily guidance" },
-  { key: "sleep_support", label: "Sleep support" },
-  { key: "big_feelings", label: "Big feelings" },
+const FOCUS_OPTIONS: Array<{ key: "daily_guidance" | "sleep_support" | "big_feelings"; label: string; hint: string }> = [
+  { key: "daily_guidance", label: "Daily guidance", hint: "A little of everything, every day" },
+  { key: "sleep_support", label: "Sleep support", hint: "Naps, nights, and routines" },
+  { key: "big_feelings", label: "Big feelings", hint: "Tantrums, emotions, connection" },
 ];
 
-/** Looks like a date the API will accept (YYYY-MM-DD). */
-function isIsoDate(v: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(v);
+interface DraftChild {
+  name: string;
+  iso: string;
 }
 
 export default function Onboarding() {
   const [step, setStep] = useState<Step>("parent");
   const [name, setName] = useState("");
   const [focus, setFocus] = useState<(typeof FOCUS_OPTIONS)[number]["key"]>("daily_guidance");
-  const [childName, setChildName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
+
+  // Multi-child: a confirmed list plus the in-progress draft.
+  const [children, setChildren] = useState<DraftChild[]>([]);
+  const [cName, setCName] = useState("");
+  const [cDate, setCDate] = useState<DateParts>(EMPTY_DATE);
+
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const draftIso = toIsoDate(cDate);
+  const draftValid = cName.trim().length > 0 && draftIso !== null;
+
+  function addDraft(): DraftChild[] {
+    if (!draftValid || !draftIso) return children;
+    const next = [...children, { name: cName.trim(), iso: draftIso }];
+    setChildren(next);
+    setCName("");
+    setCDate(EMPTY_DATE);
+    return next;
+  }
+
+  function removeChild(i: number) {
+    setChildren(children.filter((_, idx) => idx !== i));
+  }
+
+  function continueFromChildren() {
+    // Fold the current draft in (if filled), then require at least one child.
+    const list = draftValid ? addDraft() : children;
+    if (list.length === 0) {
+      setError("Add at least one child to continue.");
+      return;
+    }
+    setError(null);
+    setStep("focus");
+  }
+
   async function finish() {
     setError(null);
-    if (!isIsoDate(birthdate)) {
-      setError("Please enter the birthdate as YYYY-MM-DD.");
+    const list = draftValid ? addDraft() : children;
+    if (list.length === 0) {
+      setError("Add at least one child first.");
+      setStep("children");
       return;
     }
     setBusy(true);
     try {
       await api.bootstrap({ name: name.trim(), focus_area: focus });
-      await api.createChild({ name: childName.trim(), birthdate });
+      for (const child of list) {
+        await api.createChild({ name: child.name, birthdate: child.iso });
+      }
       await api.completeOnboarding();
       router.replace("/today");
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "Something went wrong. Try again.";
-      setError(msg);
+      setError(e instanceof ApiError ? e.message : "Something went wrong. Try again.");
     } finally {
       setBusy(false);
     }
@@ -49,34 +84,71 @@ export default function Onboarding() {
 
   return (
     <Screen>
-      <View style={{ gap: spacing.xl, maxWidth: 420, width: "100%", alignSelf: "center", flex: 1 }}>
+      <View style={{ gap: spacing.xl, maxWidth: 440, width: "100%", alignSelf: "center", flex: 1 }}>
         {step === "parent" && (
           <View style={{ gap: spacing.lg }}>
             <Header title="What should we call you?" subtitle="Your first name is enough." />
             <Field label="Your name" value={name} onChangeText={setName} placeholder="Alex" />
-            <Button
-              title="Continue"
-              onPress={() => name.trim() && setStep("child")}
-              disabled={!name.trim()}
-            />
+            <Button title="Continue" onPress={() => name.trim() && setStep("children")} disabled={!name.trim()} />
           </View>
         )}
 
-        {step === "child" && (
+        {step === "children" && (
           <View style={{ gap: spacing.lg }}>
-            <Header title="Tell us about your little one" subtitle="We tailor each day to their age." />
-            <Field label="Child's name" value={childName} onChangeText={setChildName} placeholder="Sam" />
-            <Field
-              label="Birthdate (YYYY-MM-DD)"
-              value={birthdate}
-              onChangeText={setBirthdate}
-              placeholder="2026-01-15"
-              autoCapitalize="none"
+            <Header
+              title="Tell us about your little one"
+              subtitle="We tailor each day to their age. Add as many children as you like."
             />
+
+            {children.length > 0 && (
+              <View style={{ gap: spacing.sm }}>
+                {children.map((c, i) => (
+                  <View
+                    key={`${c.name}-${i}`}
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      backgroundColor: colors.surfaceAlt,
+                      borderRadius: radius.button,
+                      paddingVertical: spacing.md,
+                      paddingHorizontal: spacing.lg,
+                    }}
+                  >
+                    <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>
+                      {c.name} <Text style={{ fontWeight: "400", color: colors.textMuted }}>· {c.iso}</Text>
+                    </Text>
+                    <Text onPress={() => removeChild(i)} style={{ color: colors.danger, fontSize: font.small }}>
+                      Remove
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={{ gap: spacing.md }}>
+              <Field label="Child's name" value={cName} onChangeText={setCName} placeholder="Sam" />
+              <DateSelect label="Birthdate" value={cDate} onChange={setCDate} />
+            </View>
+
+            <Pressable onPress={addDraft} disabled={!draftValid}>
+              <Text
+                style={{
+                  color: draftValid ? colors.primary : colors.textMuted,
+                  fontSize: font.small,
+                  fontWeight: "600",
+                  textAlign: "center",
+                }}
+              >
+                + Add another child
+              </Text>
+            </Pressable>
+
+            {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
             <Button
               title="Continue"
-              onPress={() => childName.trim() && isIsoDate(birthdate) && setStep("focus")}
-              disabled={!childName.trim() || !isIsoDate(birthdate)}
+              onPress={continueFromChildren}
+              disabled={children.length === 0 && !draftValid}
             />
           </View>
         )}
@@ -88,7 +160,7 @@ export default function Onboarding() {
               {FOCUS_OPTIONS.map((opt) => {
                 const selected = focus === opt.key;
                 return (
-                  <Text
+                  <Pressable
                     key={opt.key}
                     onPress={() => setFocus(opt.key)}
                     style={{
@@ -97,14 +169,20 @@ export default function Onboarding() {
                       borderWidth: 1,
                       borderColor: selected ? colors.primary : colors.border,
                       backgroundColor: selected ? colors.surfaceAlt : colors.surface,
-                      color: colors.text,
-                      fontSize: font.body,
-                      fontWeight: selected ? "700" : "500",
-                      overflow: "hidden",
+                      gap: 2,
                     }}
                   >
-                    {opt.label}
-                  </Text>
+                    <Text
+                      style={{
+                        color: colors.text,
+                        fontSize: font.body,
+                        fontWeight: selected ? "700" : "600",
+                      }}
+                    >
+                      {opt.label}
+                    </Text>
+                    <Text style={{ color: colors.textMuted, fontSize: font.small }}>{opt.hint}</Text>
+                  </Pressable>
                 );
               })}
             </View>

@@ -89,4 +89,39 @@ export async function accountRoutes(app: FastifyInstance): Promise<void> {
 
     return reply.send({ parent, children: enriched, subscription: subscription ?? null });
   });
+
+  // PATCH /v1/me — update the parent's profile (name, focus, timezone).
+  app.patch("/v1/me", { preHandler: auth }, async (req: FastifyRequest, reply: FastifyReply) => {
+    const parent = await resolveParent(req);
+    if (!parent) {
+      return reply.code(404).send({
+        error: { code: "NOT_FOUND", message: "No account; call /v1/account/bootstrap first" },
+      });
+    }
+
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const updates: Record<string, unknown> = {};
+    if (typeof body.name === "string") updates.name = body.name.trim();
+    if (typeof body.focus_area === "string") updates.focus_area = body.focus_area;
+    if (typeof body.timezone === "string") updates.timezone = body.timezone;
+    if (typeof body.preferred_send_hour === "number") updates.preferred_send_hour = body.preferred_send_hour;
+
+    if (Object.keys(updates).length === 0) {
+      return reply.code(400).send({ error: { code: "VALIDATION", message: "No updatable fields" } });
+    }
+
+    const { data, error } = await app.db
+      .from("parents")
+      .update(updates)
+      .eq("id", parent.id)
+      .select(
+        "id, auth_user_id, name, timezone, onboarding_step, focus_area, status, sms_opt_in, preferred_send_hour, preferences",
+      )
+      .single();
+
+    if (error || !data) {
+      return reply.code(500).send({ error: { code: "INTERNAL", message: error?.message ?? "update failed" } });
+    }
+    return reply.send(data);
+  });
 }

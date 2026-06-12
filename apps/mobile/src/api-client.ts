@@ -63,11 +63,26 @@ export const api = {
 
   me: () => request<MeResponse>("/v1/me"),
 
+  updateProfile: (input: { name?: string; focus_area?: string }) =>
+    request<MeResponse["parent"]>("/v1/me", {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+
   createChild: (input: { name: string; birthdate?: string; due_date?: string; gender?: string }) =>
     request<MeResponse["children"][number]>("/v1/children", {
       method: "POST",
       body: JSON.stringify(input),
     }),
+
+  updateChild: (id: string, input: { name?: string; birthdate?: string }) =>
+    request<MeResponse["children"][number]>(`/v1/children/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+
+  deleteChild: (id: string) =>
+    request<void>(`/v1/children/${id}`, { method: "DELETE" }),
 
   completeOnboarding: () =>
     request<{ onboarding_step: string }>("/v1/onboarding/complete", { method: "POST" }),

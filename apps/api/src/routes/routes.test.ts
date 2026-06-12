@@ -17,6 +17,7 @@ const testConfig: AppConfig = {
 describe("EPIC 4 routes are auth-gated", () => {
   const cases: Array<[string, string, object?]> = [
     ["GET", "/v1/me"],
+    ["PATCH", "/v1/me", { name: "B" }],
     ["POST", "/v1/account/bootstrap", { name: "A" }],
     ["POST", "/v1/children", { name: "Kid", birthdate: "2026-01-01" }],
     ["PATCH", "/v1/children/00000000-0000-0000-0000-000000000000", { name: "X" }],

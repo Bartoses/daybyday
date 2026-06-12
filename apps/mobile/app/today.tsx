@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import type { FeedCard, MeResponse, RequestType } from "@daybyday/schemas";
 import { api, ApiError } from "../src/api-client";
@@ -23,17 +23,21 @@ export default function Today() {
   const [child, setChild] = useState<Child | null>(null);
   const [card, setCard] = useState<FeedCard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cardLoading, setCardLoading] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<boolean | null>(null);
 
   const loadCard = useCallback(async (c: Child) => {
     setError(null);
+    setCardLoading(true);
     try {
       setCard(await api.feedToday(c.id));
       setFeedback(null);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not load today's card.");
+    } finally {
+      setCardLoading(false);
     }
   }, []);
 
@@ -49,6 +53,13 @@ export default function Today() {
       .catch(() => router.replace("/onboarding"))
       .finally(() => setLoading(false));
   }, [loadCard]);
+
+  function switchChild(c: Child) {
+    if (c.id === child?.id) return;
+    setChild(c);
+    setCard(null);
+    loadCard(c);
+  }
 
   async function quick(requestType: RequestType) {
     if (!child) return;
@@ -86,26 +97,76 @@ export default function Today() {
     );
   }
 
+  const children = me?.children ?? [];
+
   return (
     <Screen style={{ padding: 0 }}>
-      <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg, maxWidth: 560, width: "100%", alignSelf: "center" }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <View>
-            <Text style={{ fontSize: font.heading, fontWeight: "800", color: colors.text }}>
-              {greeting()}{me?.parent.name ? `, ${me.parent.name}` : ""}
-            </Text>
-            {child ? (
-              <Text style={{ fontSize: font.small, color: colors.textMuted }}>
-                {child.name}
-                {child.age_days != null ? ` · ${formatAge(child.age_days)}` : ""}
-                {child.stage ? ` · ${child.stage.replace(/_/g, " ")}` : ""}
-              </Text>
-            ) : null}
-          </View>
-          <Text onPress={signOut} style={{ color: colors.primary, fontSize: font.small }}>
-            Sign out
+      <ScrollView
+        contentContainerStyle={{
+          padding: spacing.xl,
+          gap: spacing.lg,
+          maxWidth: 600,
+          width: "100%",
+          alignSelf: "center",
+        }}
+      >
+        {/* Header */}
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <Text style={{ fontSize: font.heading, fontWeight: "800", color: colors.text }}>
+            {greeting()}
+            {me?.parent.name ? `, ${me.parent.name}` : ""}
           </Text>
+          <View style={{ flexDirection: "row", gap: spacing.md }}>
+            <Text onPress={() => router.push("/settings")} style={{ color: colors.primary, fontSize: font.small }}>
+              Settings
+            </Text>
+            <Text onPress={signOut} style={{ color: colors.textMuted, fontSize: font.small }}>
+              Sign out
+            </Text>
+          </View>
         </View>
+
+        {/* Child switcher (only when more than one) */}
+        {children.length > 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+            {children.map((c) => {
+              const active = c.id === child?.id;
+              return (
+                <Pressable
+                  key={c.id}
+                  onPress={() => switchChild(c)}
+                  style={{
+                    paddingVertical: spacing.sm,
+                    paddingHorizontal: spacing.lg,
+                    borderRadius: radius.pill,
+                    borderWidth: 1,
+                    borderColor: active ? colors.primary : colors.border,
+                    backgroundColor: active ? colors.primary : colors.surface,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: active ? colors.onPrimary : colors.text,
+                      fontWeight: active ? "700" : "500",
+                      fontSize: font.small,
+                    }}
+                  >
+                    {c.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
+        {/* Active child context line */}
+        {child ? (
+          <Text style={{ fontSize: font.small, color: colors.textMuted, marginTop: -spacing.sm }}>
+            {child.name}
+            {child.age_days != null ? ` · ${formatAge(child.age_days)}` : ""}
+            {child.stage ? ` · ${child.stage.replace(/_/g, " ")}` : ""}
+          </Text>
+        ) : null}
 
         {error ? (
           <Card style={{ borderColor: colors.danger }}>
@@ -113,60 +174,105 @@ export default function Today() {
           </Card>
         ) : null}
 
-        {card ? (
-          <Card style={{ gap: spacing.md }}>
-            <Pill label={categoryLabels[card.category] ?? card.category} />
-            <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text, lineHeight: 30 }}>
+        {cardLoading && !card ? (
+          <Card style={{ alignItems: "center", paddingVertical: spacing.xxxl }}>
+            <ActivityIndicator color={colors.primary} />
+          </Card>
+        ) : card ? (
+          <Card style={{ gap: spacing.lg, opacity: cardLoading ? 0.6 : 1 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Pill label={categoryLabels[card.category] ?? card.category} />
+              {card.stage ? (
+                <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>{card.stage}</Text>
+              ) : null}
+            </View>
+
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: "800",
+                color: colors.text,
+                lineHeight: 34,
+                letterSpacing: -0.3,
+              }}
+            >
               {card.insight}
             </Text>
-            <View style={{ gap: spacing.xs }}>
-              <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.primary }}>
+
+            {/* Action block — accented so the "do this" stands out */}
+            <View
+              style={{
+                borderLeftWidth: 3,
+                borderLeftColor: colors.primary,
+                paddingLeft: spacing.lg,
+                gap: spacing.xs,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: font.tiny,
+                  fontWeight: "800",
+                  color: colors.primary,
+                  letterSpacing: 0.5,
+                  textTransform: "uppercase",
+                }}
+              >
                 Try this today
               </Text>
-              <Text style={{ fontSize: font.body, color: colors.text, lineHeight: 24 }}>
+              <Text style={{ fontSize: font.heading, color: colors.text, lineHeight: 27 }}>
                 {card.action_tip}
               </Text>
             </View>
+
             <View
               style={{
                 backgroundColor: colors.surfaceAlt,
                 borderRadius: radius.button,
-                padding: spacing.md,
+                padding: spacing.lg,
               }}
             >
-              <Text style={{ fontSize: font.body, color: colors.textMuted, fontStyle: "italic" }}>
+              <Text style={{ fontSize: font.body, color: colors.text, fontStyle: "italic", lineHeight: 24 }}>
                 {card.reassurance}
               </Text>
             </View>
+
             {card.when_to_consult_doctor ? (
-              <Text style={{ fontSize: font.small, color: colors.textMuted }}>
+              <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
                 ⚕︎ {card.when_to_consult_doctor}
               </Text>
             ) : null}
 
-            <View style={{ flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs }}>
-              <Text
+            <View
+              style={{
+                flexDirection: "row",
+                gap: spacing.sm,
+                marginTop: spacing.xs,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+                paddingTop: spacing.md,
+              }}
+            >
+              <FeedbackChip
+                label="♥  Helpful"
+                active={feedback === true}
+                activeColor={colors.success}
                 onPress={() => sendFeedback(true)}
-                style={{ fontSize: font.small, color: feedback === true ? colors.success : colors.textMuted }}
-              >
-                ♥ Helpful
-              </Text>
-              <Text
+              />
+              <FeedbackChip
+                label="Not for us"
+                active={feedback === false}
+                activeColor={colors.danger}
                 onPress={() => sendFeedback(false)}
-                style={{ fontSize: font.small, color: feedback === false ? colors.danger : colors.textMuted }}
-              >
-                Not for us
-              </Text>
+              />
             </View>
           </Card>
         ) : (
           <Card>
-            <Text style={{ color: colors.textMuted }}>
-              No content available yet. Import the knowledge content to populate the feed.
-            </Text>
+            <Text style={{ color: colors.textMuted }}>No tip available for this age yet.</Text>
           </Card>
         )}
 
+        {/* Quick actions */}
         <View style={{ gap: spacing.sm }}>
           <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>
             Need something specific?
@@ -181,6 +287,36 @@ export default function Today() {
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+function FeedbackChip({
+  label,
+  active,
+  activeColor,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  activeColor: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: active ? activeColor : colors.border,
+        backgroundColor: active ? colors.surfaceAlt : "transparent",
+      }}
+    >
+      <Text style={{ fontSize: font.small, color: active ? activeColor : colors.textMuted, fontWeight: active ? "700" : "500" }}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
