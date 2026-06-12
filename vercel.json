@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @daybyday/mobile build",
+  "outputDirectory": "apps/mobile/dist",
+  "framework": null
+}
