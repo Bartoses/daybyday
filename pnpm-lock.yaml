@@ -32,6 +32,9 @@ importers:
       '@daybyday/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@daybyday/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       '@daybyday/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
@@ -66,6 +69,16 @@ importers:
         version: 5.9.3
 
   packages/db:
+    dependencies:
+      '@daybyday/schemas':
+        specifier: workspace:*
+        version: link:../schemas
+    devDependencies:
+      vitest:
+        specifier: ^2.1.2
+        version: 2.1.9(@types/node@22.19.21)
+
+  packages/engine:
     dependencies:
       '@daybyday/schemas':
         specifier: workspace:*
