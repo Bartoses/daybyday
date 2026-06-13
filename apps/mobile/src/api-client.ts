@@ -123,6 +123,15 @@ export const api = {
     request<void>("/v1/push/subscribe", { method: "DELETE", body: JSON.stringify({ endpoint }) }),
 
   pushTest: () => request<{ sent: number }>("/v1/push/test", { method: "POST" }),
+
+  getNotifPrefs: () =>
+    request<{ daily_enabled: boolean; send_hour: number; categories: string[] }>("/v1/notification-prefs"),
+
+  updateNotifPrefs: (input: { daily_enabled?: boolean; send_hour?: number; categories?: string[] }) =>
+    request<{ daily_enabled: boolean; send_hour: number; categories: string[] }>("/v1/notification-prefs", {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
 };
 
 export { ApiError };

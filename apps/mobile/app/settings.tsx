@@ -4,10 +4,18 @@ import { router } from "expo-router";
 import type { MeResponse } from "@daybyday/schemas";
 import { api, ApiError } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
-import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
-import { colors, font, radius, spacing } from "../src/theme";
+import { DateSelect, EMPTY_DATE, toIsoDate, Select, type DateParts } from "../src/components/form";
+import { colors, font, radius, spacing, categoryLabels } from "../src/theme";
 import { titleCase, formatAge } from "../src/format";
 import { enablePush, disablePush, getPushState, pushSupported, type PushState } from "../src/push";
+
+const NOTIF_CATEGORIES = ["sleep", "feeding", "development", "learning_play", "emotional", "behavior", "safety"];
+function formatHour(h: number): string {
+  const period = h < 12 ? "AM" : "PM";
+  const hr = h % 12 === 0 ? 12 : h % 12;
+  return `${hr}:00 ${period}`;
+}
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => ({ value: String(h), label: formatHour(h) }));
 
 type Child = MeResponse["children"][number];
 
@@ -35,6 +43,10 @@ export default function Settings() {
   const [pushState, setPushState] = useState<PushState>("unsupported");
   const [pushBusy, setPushBusy] = useState(false);
   const [pushNote, setPushNote] = useState<string | null>(null);
+  const [sendHour, setSendHour] = useState(8);
+  const [notifCats, setNotifCats] = useState<string[]>([]);
+  const [prefsBusy, setPrefsBusy] = useState(false);
+  const [prefsSaved, setPrefsSaved] = useState(false);
 
   async function refresh() {
     const m = await api.me();
@@ -48,7 +60,32 @@ export default function Settings() {
       .catch(() => router.replace("/onboarding"))
       .finally(() => setLoading(false));
     getPushState().then(setPushState);
+    api
+      .getNotifPrefs()
+      .then((p) => {
+        setSendHour(p.send_hour);
+        setNotifCats(p.categories);
+      })
+      .catch(() => {});
   }, []);
+
+  async function savePrefs() {
+    setPrefsBusy(true);
+    setPrefsSaved(false);
+    try {
+      await api.updateNotifPrefs({ daily_enabled: true, send_hour: sendHour, categories: notifCats });
+      setPrefsSaved(true);
+    } catch {
+      /* non-blocking */
+    } finally {
+      setPrefsBusy(false);
+    }
+  }
+
+  function toggleCat(c: string) {
+    setPrefsSaved(false);
+    setNotifCats((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+  }
 
   async function toggleNotifications() {
     setPushBusy(true);
@@ -215,6 +252,58 @@ export default function Settings() {
           )}
           {pushNote ? (
             <Text style={{ fontSize: font.small, color: colors.textMuted }}>{pushNote}</Text>
+          ) : null}
+
+          {/* Schedule + topic controls (only meaningful once reminders are on) */}
+          {pushState === "subscribed" ? (
+            <View style={{ gap: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.lg }}>
+              <Select
+                label="When should we send it?"
+                value={String(sendHour)}
+                options={HOUR_OPTIONS}
+                onChange={(v) => {
+                  setSendHour(Number(v));
+                  setPrefsSaved(false);
+                }}
+              />
+              <View style={{ gap: spacing.xs }}>
+                <Text style={{ color: colors.textMuted, fontSize: font.small, fontWeight: "600" }}>
+                  What it should be about
+                </Text>
+                <Text style={{ color: colors.textMuted, fontSize: font.tiny }}>
+                  Pick topics, or leave all off for a balanced mix.
+                </Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.xs }}>
+                  {NOTIF_CATEGORIES.map((c) => {
+                    const active = notifCats.includes(c);
+                    return (
+                      <Pressable
+                        key={c}
+                        onPress={() => toggleCat(c)}
+                        style={{
+                          paddingVertical: spacing.sm,
+                          paddingHorizontal: spacing.md,
+                          borderRadius: radius.pill,
+                          borderWidth: 1,
+                          borderColor: active ? colors.primary : colors.border,
+                          backgroundColor: active ? colors.surfaceAlt : colors.surface,
+                        }}
+                      >
+                        <Text style={{ color: active ? colors.primary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
+                          {categoryLabels[c] ?? c}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+              <Button
+                title={prefsSaved ? "Saved ✓" : "Save schedule"}
+                variant="secondary"
+                onPress={savePrefs}
+                loading={prefsBusy}
+              />
+            </View>
           ) : null}
         </Card>
 

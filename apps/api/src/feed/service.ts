@@ -153,7 +153,7 @@ export interface SelectOptions {
 }
 
 /** Local hour (0–23) in the given IANA timezone, for time-of-day boosting. */
-function localHour(now: Date, timezone: string | undefined): number {
+export function localHour(now: Date, timezone: string | undefined): number {
   try {
     const s = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone || "America/Denver",

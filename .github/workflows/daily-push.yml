@@ -1,0 +1,19 @@
+name: Daily push reminders
+
+# Fires hourly; the API only sends to families whose local time matches their
+# chosen send hour (and not already sent today), so the effective cadence is
+# one notification per family per day.
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger daily-push endpoint
+        run: |
+          curl -sS -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://daybydayapi-production.up.railway.app/v1/internal/cron/daily-push
