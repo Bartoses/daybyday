@@ -22,6 +22,8 @@ export interface AppConfig {
   };
   /** Shared secret guarding internal cron endpoints. */
   cronSecret: string;
+  /** Email allowed to access admin endpoints. */
+  adminEmail: string;
 }
 
 function env(key: string, fallback = ""): string {
@@ -50,5 +52,6 @@ export function loadConfig(): AppConfig {
       subject: env("VAPID_SUBJECT", "mailto:hello@daybyday.app"),
     },
     cronSecret: env("CRON_SECRET"),
+    adminEmail: env("ADMIN_EMAIL", "bartoses1@gmail.com").toLowerCase(),
   };
 }

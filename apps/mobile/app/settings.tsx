@@ -189,6 +189,27 @@ export default function Settings() {
 
         {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
 
+        {me?.is_admin ? (
+          <Pressable
+            onPress={() => router.push("/admin")}
+            style={{
+              borderRadius: radius.button,
+              borderWidth: 1,
+              borderColor: colors.primary,
+              backgroundColor: colors.surface,
+              padding: spacing.lg,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: font.body, color: colors.primary, fontWeight: "700" }}>
+              Admin · Schedule broadcasts
+            </Text>
+            <Text style={{ color: colors.primary, fontSize: font.body }}>→</Text>
+          </Pressable>
+        ) : null}
+
         {/* Profile */}
         <Card style={{ gap: spacing.md }}>
           <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>Your profile</Text>

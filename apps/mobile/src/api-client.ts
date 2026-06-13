@@ -132,7 +132,28 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(input),
     }),
+
+  // Admin
+  adminBroadcasts: () => request<{ broadcasts: Broadcast[] }>("/v1/admin/broadcasts"),
+
+  createBroadcast: (input: { title: string; body: string; url?: string; scheduled_for: string }) =>
+    request<Broadcast>("/v1/admin/broadcasts", { method: "POST", body: JSON.stringify(input) }),
+
+  cancelBroadcast: (id: string) =>
+    request<void>(`/v1/admin/broadcasts/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };
+
+export interface Broadcast {
+  id: string;
+  title: string;
+  body: string;
+  url: string | null;
+  audience?: string;
+  scheduled_for: string;
+  status: "scheduled" | "sent" | "canceled";
+  sent_at?: string | null;
+  sent_count?: number | null;
+}
 
 export { ApiError };
 

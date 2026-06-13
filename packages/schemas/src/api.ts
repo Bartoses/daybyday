@@ -26,6 +26,7 @@ export const MeResponse = z.object({
   parent: Parent,
   children: z.array(ChildWithAge),
   subscription: Subscription.nullable(),
+  is_admin: z.boolean().default(false),
 });
 export type MeResponse = z.infer<typeof MeResponse>;
 

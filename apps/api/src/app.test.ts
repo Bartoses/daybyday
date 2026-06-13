@@ -10,6 +10,7 @@ const testConfig: AppConfig = {
   supabase: { url: "https://x.supabase.co", anonKey: "anon", serviceRoleKey: "svc" },
   vapid: { publicKey: "", privateKey: "", subject: "mailto:test@daybyday.test" },
   cronSecret: "test-secret",
+  adminEmail: "admin@daybyday.test",
 };
 
 describe("API app", () => {

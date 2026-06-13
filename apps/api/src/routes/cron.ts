@@ -34,9 +34,11 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
     // Only consider parents who have at least one push subscription.
     const { data: subRows } = await app.db.from("web_push_subscriptions").select("parent_id");
     const parentIds = [...new Set((subRows ?? []).map((r) => (r as { parent_id: string }).parent_id))];
-    if (parentIds.length === 0) return reply.send({ considered: 0, sent: 0 });
 
-    const [{ data: parents }, { data: prefs }, { data: children }, { data: sentRows }] = await Promise.all([
+    const considered0 = parentIds.length === 0;
+    const [{ data: parents }, { data: prefs }, { data: children }, { data: sentRows }] = considered0
+      ? [{ data: [] }, { data: [] }, { data: [] }, { data: [] }]
+      : await Promise.all([
       app.db.from("parents").select("id, name, timezone").in("id", parentIds),
       app.db.from("notification_prefs").select("parent_id, daily_enabled, send_hour, categories").in("parent_id", parentIds),
       app.db.from("children").select("id, parent_id, name, birthdate, due_date, created_at").in("parent_id", parentIds).order("created_at", { ascending: true }),
@@ -97,6 +99,31 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
       }
     }
 
-    return reply.send({ considered, sent });
+    // --- Admin broadcasts: send any that are now due, to all subscribed parents.
+    const { data: dueBroadcasts } = await app.db
+      .from("broadcasts")
+      .select("id, title, body, url")
+      .eq("status", "scheduled")
+      .lte("scheduled_for", now.toISOString());
+
+    let broadcastsSent = 0;
+    for (const b of (dueBroadcasts ?? []) as Array<{ id: string; title: string; body: string; url: string | null }>) {
+      let count = 0;
+      for (const pid of parentIds) {
+        const r = await sendToParent(app.db, app.config, pid, {
+          title: b.title,
+          body: b.body,
+          url: b.url || "/today",
+        });
+        count += r.sent;
+      }
+      await app.db
+        .from("broadcasts")
+        .update({ status: "sent", sent_at: now.toISOString(), sent_count: count })
+        .eq("id", b.id);
+      broadcastsSent += 1;
+    }
+
+    return reply.send({ considered, sent, broadcastsSent });
   });
 }

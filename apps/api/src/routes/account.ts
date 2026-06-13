@@ -87,7 +87,8 @@ export async function accountRoutes(app: FastifyInstance): Promise<void> {
       return { ...child, age_days: age, stage: age !== null ? stageForAgeDays(age) : null };
     });
 
-    return reply.send({ parent, children: enriched, subscription: subscription ?? null });
+    const is_admin = (req.authEmail ?? "") === app.config.adminEmail;
+    return reply.send({ parent, children: enriched, subscription: subscription ?? null, is_admin });
   });
 
   // PATCH /v1/me — update the parent's profile (name, focus, timezone).

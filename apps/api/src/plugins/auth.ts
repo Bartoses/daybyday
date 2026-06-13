@@ -10,6 +10,7 @@ import type { AppConfig } from "../config.js";
 declare module "fastify" {
   interface FastifyRequest {
     authUserId?: string;
+    authEmail?: string;
     supabase?: SupabaseClient;
   }
 }
@@ -38,6 +39,7 @@ export function makeAuthPreHandler(config: AppConfig) {
     }
 
     req.authUserId = data.user.id;
+    req.authEmail = data.user.email?.toLowerCase();
     req.supabase = supabase;
   };
 }

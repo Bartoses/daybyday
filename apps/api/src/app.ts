@@ -10,6 +10,7 @@ import { questionRoutes } from "./routes/questions.js";
 import { pushRoutes } from "./routes/push.js";
 import { notificationRoutes } from "./routes/notifications.js";
 import { cronRoutes } from "./routes/cron.js";
+import { adminRoutes } from "./routes/admin.js";
 
 /**
  * Builds the Fastify app. Health + guarded SMS webhook + the EPIC 4 feature
@@ -67,6 +68,7 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
   app.register(pushRoutes);
   app.register(notificationRoutes);
   app.register(cronRoutes);
+  app.register(adminRoutes);
 
   return app;
 }
