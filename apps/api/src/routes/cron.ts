@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { hashString } from "@daybyday/engine";
 import type { Category } from "@daybyday/schemas";
 import { selectFeedCard, localHour, type ChildRow } from "../feed/service.js";
-import { sendToParent } from "../push/service.js";
+import { sendToParent, sendBroadcastToAll } from "../push/service.js";
 
 interface ParentRow {
   id: string;
@@ -108,15 +108,7 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
 
     let broadcastsSent = 0;
     for (const b of (dueBroadcasts ?? []) as Array<{ id: string; title: string; body: string; url: string | null }>) {
-      let count = 0;
-      for (const pid of parentIds) {
-        const r = await sendToParent(app.db, app.config, pid, {
-          title: b.title,
-          body: b.body,
-          url: b.url || "/today",
-        });
-        count += r.sent;
-      }
+      const count = await sendBroadcastToAll(app.db, app.config, b);
       await app.db
         .from("broadcasts")
         .update({ status: "sent", sent_at: now.toISOString(), sent_count: count })

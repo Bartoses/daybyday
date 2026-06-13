@@ -118,7 +118,13 @@ export default function Today() {
             <Text onPress={() => router.push("/settings")} style={{ color: colors.primary, fontSize: font.small }}>
               Settings
             </Text>
-            <Text onPress={signOut} style={{ color: colors.textMuted, fontSize: font.small }}>
+            <Text
+              onPress={async () => {
+                await signOut();
+                router.replace("/sign-in");
+              }}
+              style={{ color: colors.textMuted, fontSize: font.small }}
+            >
               Sign out
             </Text>
           </View>

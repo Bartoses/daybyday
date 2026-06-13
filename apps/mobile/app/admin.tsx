@@ -65,25 +65,39 @@ export default function Admin() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function schedule() {
+  async function submit(sendNow: boolean) {
     setError(null);
     if (!title.trim() || !body.trim()) {
       setError("Title and message are required.");
       return;
     }
-    // Build an ISO timestamp from the chosen local day + hour.
-    const scheduledFor = new Date(`${day}T${pad(Number(hour))}:00:00`).toISOString();
     setBusy(true);
     try {
-      await api.createBroadcast({ title: title.trim(), body: body.trim(), url: url.trim() || undefined, scheduled_for: scheduledFor });
+      await api.createBroadcast({
+        title: title.trim(),
+        body: body.trim(),
+        url: url.trim() || undefined,
+        ...(sendNow
+          ? { send_now: true }
+          : { scheduled_for: new Date(`${day}T${pad(Number(hour))}:00:00`).toISOString() }),
+      });
       setTitle("");
       setBody("");
       setUrl("");
       await refresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Could not schedule.");
+      setError(e instanceof ApiError ? e.message : "Could not send.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function sendNow(id: string) {
+    try {
+      await api.sendBroadcastNow(id);
+      await refresh();
+    } catch {
+      /* ignore */
     }
   }
 
@@ -129,9 +143,10 @@ export default function Admin() {
             </View>
           </View>
           {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
-          <Button title="Schedule broadcast" onPress={schedule} loading={busy} />
+          <Button title="Send now" onPress={() => submit(true)} loading={busy} />
+          <Button title="Schedule for the time above" variant="secondary" onPress={() => submit(false)} loading={busy} />
           <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>
-            Sends to everyone with notifications on, at the chosen time (your timezone). Fires within the hour.
+            Goes to everyone with notifications on. "Send now" is instant; scheduled sends fire within ~15 minutes of the chosen time (your timezone).
           </Text>
         </Card>
 
@@ -153,9 +168,14 @@ export default function Admin() {
                   {b.status === "sent" && b.sent_count != null ? `  ·  sent to ${b.sent_count}` : ""}
                 </Text>
                 {b.status === "scheduled" ? (
-                  <Text onPress={() => cancel(b.id)} style={{ color: colors.danger, fontSize: font.small, marginTop: 2 }}>
-                    Cancel
-                  </Text>
+                  <View style={{ flexDirection: "row", gap: spacing.lg, marginTop: 2 }}>
+                    <Text onPress={() => sendNow(b.id)} style={{ color: colors.primary, fontSize: font.small, fontWeight: "600" }}>
+                      Send now
+                    </Text>
+                    <Text onPress={() => cancel(b.id)} style={{ color: colors.danger, fontSize: font.small }}>
+                      Cancel
+                    </Text>
+                  </View>
                 ) : null}
               </Card>
             ))

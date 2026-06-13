@@ -136,8 +136,16 @@ export const api = {
   // Admin
   adminBroadcasts: () => request<{ broadcasts: Broadcast[] }>("/v1/admin/broadcasts"),
 
-  createBroadcast: (input: { title: string; body: string; url?: string; scheduled_for: string }) =>
-    request<Broadcast>("/v1/admin/broadcasts", { method: "POST", body: JSON.stringify(input) }),
+  createBroadcast: (input: {
+    title: string;
+    body: string;
+    url?: string;
+    scheduled_for?: string;
+    send_now?: boolean;
+  }) => request<Broadcast>("/v1/admin/broadcasts", { method: "POST", body: JSON.stringify(input) }),
+
+  sendBroadcastNow: (id: string) =>
+    request<{ sent: number }>(`/v1/admin/broadcasts/${encodeURIComponent(id)}/send`, { method: "POST" }),
 
   cancelBroadcast: (id: string) =>
     request<void>(`/v1/admin/broadcasts/${encodeURIComponent(id)}`, { method: "DELETE" }),

@@ -69,3 +69,23 @@ export async function sendToParent(
 
   return { sent, pruned };
 }
+
+/** Send a broadcast to every subscribed parent. Returns the delivered count. */
+export async function sendBroadcastToAll(
+  db: SupabaseClient,
+  config: AppConfig,
+  broadcast: { title: string; body: string; url?: string | null },
+): Promise<number> {
+  const { data } = await db.from("web_push_subscriptions").select("parent_id");
+  const parentIds = [...new Set((data ?? []).map((r) => (r as { parent_id: string }).parent_id))];
+  let count = 0;
+  for (const pid of parentIds) {
+    const res = await sendToParent(db, config, pid, {
+      title: broadcast.title,
+      body: broadcast.body,
+      url: broadcast.url || "/today",
+    });
+    count += res.sent;
+  }
+  return count;
+}

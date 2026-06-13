@@ -1,11 +1,12 @@
 name: Daily push reminders
 
-# Fires hourly; the API only sends to families whose local time matches their
-# chosen send hour (and not already sent today), so the effective cadence is
-# one notification per family per day.
+# Fires every 15 min so scheduled broadcasts go out promptly. The API still only
+# sends each family their daily tip once (deduped, at their chosen local hour),
+# so the effective daily cadence is unchanged — this just tightens latency for
+# admin-scheduled broadcasts.
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch: {}
 
 jobs:
