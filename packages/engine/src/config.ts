@@ -9,6 +9,8 @@ export const ENGINE_CONFIG = {
   defaultCooldownDays: 21,
   stageBoostWeight: 20,
   leapBoostWeight: 25,
+  /** Boost when a tip's category fits the current time of day (evening→sleep, etc.). */
+  timeOfDayBoost: 12,
   noveltyWeight: 15,
   categoryRotationPenalty: 18,
   rotationGroupPenalty: 12,

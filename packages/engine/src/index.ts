@@ -24,9 +24,11 @@ export {
   scoreCandidate,
   scorePool,
   selectContentItem,
+  preferredCategoriesForHour,
   type Candidate,
   type HistoryEntry,
   type ScoreInput,
+  type TemporalContext,
 } from "./score.js";
 export { renderCard, type RenderedCard } from "./render.js";
 

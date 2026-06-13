@@ -124,6 +124,39 @@ describe("scoreCandidate", () => {
     expect(dev - devNoLeap).toBe(0);
   });
 
+  it("applies a time-of-day boost when category fits the hour (evening → sleep)", () => {
+    const sleep = makeCandidate({ category: "sleep", stage: "newborn" });
+    const evening = scoreCandidate(
+      sleep,
+      makeInput({ temporal: { hour: 20 }, preferredCategory: "sleep" }),
+    )!;
+    const noTemporal = scoreCandidate(
+      sleep,
+      makeInput({ temporal: null, preferredCategory: "sleep" }),
+    )!;
+    expect(evening - noTemporal).toBe(12);
+  });
+
+  it("does NOT time-boost a category that doesn't fit the hour (sleep at midday)", () => {
+    const sleep = makeCandidate({ category: "sleep", stage: "newborn" });
+    const midday = scoreCandidate(
+      sleep,
+      makeInput({ temporal: { hour: 13 }, preferredCategory: "sleep" }),
+    )!;
+    const noTemporal = scoreCandidate(
+      sleep,
+      makeInput({ temporal: null, preferredCategory: "sleep" }),
+    )!;
+    expect(midday - noTemporal).toBe(0);
+  });
+
+  it("morning boosts feeding; evening boosts sleep", () => {
+    const feeding = makeCandidate({ category: "feeding", stage: "newborn" });
+    const morningFeeding = scoreCandidate(feeding, makeInput({ temporal: { hour: 8 }, preferredCategory: "feeding" }))!;
+    const eveningFeeding = scoreCandidate(feeding, makeInput({ temporal: { hour: 20 }, preferredCategory: "feeding" }))!;
+    expect(morningFeeding).toBeGreaterThan(eveningFeeding); // feeding fits morning, not evening
+  });
+
   it("applies difficulty penalties (easy 0, medium 4, hard 8)", () => {
     const easy = scoreCandidate(makeCandidate({ difficulty_level: "easy" }), makeInput())!;
     const medium = scoreCandidate(makeCandidate({ difficulty_level: "medium" }), makeInput())!;

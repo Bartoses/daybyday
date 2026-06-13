@@ -75,7 +75,11 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
       if (card) return reply.send(card);
     }
 
-    const card = await selectFeedCard(app.db, parentId, child, { isDaily: true, now });
+    const card = await selectFeedCard(app.db, parentId, child, {
+      isDaily: true,
+      now,
+      timezone: req.parent!.timezone,
+    });
     if (!card) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "No content available" } });
 
     // Log the daily send (unique index enforces one per child/day).
@@ -126,6 +130,7 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
         requestedCategory: category,
         isDaily: false,
         now,
+        timezone: req.parent!.timezone,
       });
       if (!card) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "No content available" } });
 

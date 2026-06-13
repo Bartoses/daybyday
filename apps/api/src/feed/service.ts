@@ -147,7 +147,25 @@ export interface SelectOptions {
   /** Distinguishes the daily seed from a follow-up seed. */
   isDaily: boolean;
   lookbackDays?: number;
+  /** IANA timezone for time-of-day biasing (defaults to America/Denver). */
+  timezone?: string;
   now?: Date;
+}
+
+/** Local hour (0–23) in the given IANA timezone, for time-of-day boosting. */
+function localHour(now: Date, timezone: string | undefined): number {
+  try {
+    const s = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone || "America/Denver",
+      hour: "numeric",
+      hour12: false,
+    }).format(now);
+    const h = parseInt(s, 10);
+    if (!Number.isFinite(h)) return now.getHours();
+    return h === 24 ? 0 : h;
+  } catch {
+    return now.getHours();
+  }
 }
 
 /**
@@ -187,6 +205,7 @@ export async function selectFeedCard(
     preferredStages,
     history,
     leapContext: leapContextForAge(ageDays),
+    temporal: { hour: localHour(now, opts.timezone) },
     now,
   });
 

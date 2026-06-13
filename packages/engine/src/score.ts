@@ -43,12 +43,34 @@ export interface ScoreInput {
   preferredStages: string[];
   history: HistoryEntry[];
   leapContext: LeapContext | null;
+  /** Local time-of-day context for temporal category biasing (null = no bias). */
+  temporal?: TemporalContext | null;
   /** Reference "now" for cooldown math (defaults to Date.now()). */
   now: Date;
 }
 
+/** Local clock context used to bias categories by time of day. */
+export interface TemporalContext {
+  /** Local hour 0–23 in the family's timezone. */
+  hour: number;
+}
+
 /** Categories that get a boost during an active leap window (legacy set, DB terms). */
 const LEAP_BOOST_CATEGORIES: ReadonlySet<Category> = new Set(["sleep", "emotional", "behavior"]);
+
+// Time-of-day → categories that feel most relevant then.
+const MORNING: ReadonlySet<Category> = new Set(["feeding", "learning_play", "development"]);
+const MIDDAY: ReadonlySet<Category> = new Set(["learning_play", "development", "behavior"]);
+const EVENING: ReadonlySet<Category> = new Set(["sleep", "emotional", "behavior"]);
+const NIGHT: ReadonlySet<Category> = new Set(["sleep", "emotional"]);
+
+/** Preferred categories for a given local hour. */
+export function preferredCategoriesForHour(hour: number): ReadonlySet<Category> {
+  if (hour >= 5 && hour < 11) return MORNING;
+  if (hour >= 11 && hour < 17) return MIDDAY;
+  if (hour >= 17 && hour < 22) return EVENING;
+  return NIGHT;
+}
 
 /**
  * Score a single candidate. Returns `null` when the tip is inside its cooldown
@@ -107,6 +129,12 @@ export function scoreCandidate(candidate: Candidate, input: ScoreInput): number 
 
   if (leapContext?.inLeapWindow && LEAP_BOOST_CATEGORIES.has(category)) {
     score += ENGINE_CONFIG.leapBoostWeight;
+  }
+
+  // Time-of-day bias: gently surface categories that fit the moment (evening →
+  // sleep/wind-down, morning → feeding/play). Soft enough not to override age fit.
+  if (input.temporal && preferredCategoriesForHour(input.temporal.hour).has(category)) {
+    score += ENGINE_CONFIG.timeOfDayBoost;
   }
 
   score -= ENGINE_CONFIG.difficultyPenalty[String(candidate.difficulty_level || "easy").toLowerCase()] ?? 0;
