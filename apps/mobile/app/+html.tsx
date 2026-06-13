@@ -24,6 +24,14 @@ export default function Root({ children }: PropsWithChildren) {
           content="The parenting companion that grows with your family, one day at a time."
         />
 
+        {/* Brand fonts: Fraunces (display serif) + Inter (body) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+        />
+
         {/* PWA */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#6B8F71" />
@@ -47,7 +55,7 @@ export default function Root({ children }: PropsWithChildren) {
 }
 
 const BASE_CSS = `
-html, body { background-color: #FBF9F6; }
+html, body { background-color: #FBF9F6; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
 @media (prefers-color-scheme: dark) { html, body { background-color: #1A1B19; } }
 `;
 

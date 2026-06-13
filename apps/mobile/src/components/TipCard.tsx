@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { FeedCard } from "@daybyday/schemas";
-import { Card, Pill } from "./ui";
-import { colors, font, radius, spacing, categoryLabels } from "../theme";
+import { Card } from "./ui";
+import { colors, font, fonts, radius, spacing, categoryMeta } from "../theme";
+
+const FALLBACK_META = { emoji: "✨", tint: colors.surfaceAlt, ink: colors.textMuted, label: "Tip" };
 
 /** Whether the card has extra depth worth an expandable section. */
 function hasMore(card: FeedCard): boolean {
@@ -100,42 +102,67 @@ export function TipCard({
     onFeedback?.(helpful);
   }
 
+  const meta = categoryMeta[card.category] ?? FALLBACK_META;
+
   return (
     <Card style={{ gap: spacing.lg, opacity: dimmed ? 0.6 : 1 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Pill label={categoryLabels[card.category] ?? card.category} />
-        {card.stage ? <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>{card.stage}</Text> : null}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing.xs,
+            backgroundColor: meta.tint,
+            borderRadius: radius.pill,
+            paddingVertical: spacing.xs,
+            paddingHorizontal: spacing.md,
+          }}
+        >
+          <Text style={{ fontSize: font.small }}>{meta.emoji}</Text>
+          <Text style={{ fontSize: font.tiny, fontWeight: "700", color: meta.ink, letterSpacing: 0.3 }}>
+            {meta.label.toUpperCase()}
+          </Text>
+        </View>
+        {card.stage ? (
+          <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>{card.stage}</Text>
+        ) : null}
       </View>
 
       <Text
         style={{
-          fontSize: 26,
-          fontWeight: "800",
+          fontFamily: fonts.display,
+          fontSize: 27,
+          fontWeight: "600",
           color: colors.text,
-          lineHeight: 34,
-          letterSpacing: -0.3,
+          lineHeight: 36,
+          letterSpacing: -0.2,
         }}
       >
         {card.insight}
       </Text>
 
-      <View style={{ borderLeftWidth: 3, borderLeftColor: colors.primary, paddingLeft: spacing.lg, gap: spacing.xs }}>
-        <Text
-          style={{
-            fontSize: font.tiny,
-            fontWeight: "800",
-            color: colors.primary,
-            letterSpacing: 0.5,
-            textTransform: "uppercase",
-          }}
-        >
-          Try this today
-        </Text>
+      {/* Action — the "do this" block, clearly set apart */}
+      <View style={{ backgroundColor: colors.primarySoft, borderRadius: radius.card, padding: spacing.lg, gap: spacing.xs }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
+          <Text style={{ fontSize: font.tiny }}>✓</Text>
+          <Text
+            style={{
+              fontSize: font.tiny,
+              fontWeight: "800",
+              color: colors.primaryPress,
+              letterSpacing: 0.6,
+              textTransform: "uppercase",
+            }}
+          >
+            Try this today
+          </Text>
+        </View>
         <Text style={{ fontSize: font.heading, color: colors.text, lineHeight: 27 }}>{card.action_tip}</Text>
       </View>
 
-      <View style={{ backgroundColor: colors.surfaceAlt, borderRadius: radius.button, padding: spacing.lg }}>
-        <Text style={{ fontSize: font.body, color: colors.text, fontStyle: "italic", lineHeight: 24 }}>
+      <View style={{ flexDirection: "row", gap: spacing.sm }}>
+        <Text style={{ fontSize: font.heading, lineHeight: 24 }}>💬</Text>
+        <Text style={{ flex: 1, fontSize: font.body, color: colors.textMuted, fontStyle: "italic", lineHeight: 24 }}>
           {card.reassurance}
         </Text>
       </View>
