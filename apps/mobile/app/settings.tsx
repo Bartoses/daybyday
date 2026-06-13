@@ -5,7 +5,7 @@ import type { MeResponse } from "@daybyday/schemas";
 import { api, ApiError } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, Select, type DateParts } from "../src/components/form";
-import { colors, font, radius, spacing, categoryLabels } from "../src/theme";
+import { colors, font, fonts, radius, spacing, categoryLabels } from "../src/theme";
 import { titleCase, formatAge } from "../src/format";
 import { enablePush, disablePush, getPushState, pushSupported, type PushState } from "../src/push";
 
@@ -178,7 +178,7 @@ export default function Settings() {
         }}
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text }}>Settings</Text>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>Settings</Text>
           <Text
             onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))}
             style={{ color: colors.primary, fontSize: font.small }}
@@ -212,7 +212,7 @@ export default function Settings() {
 
         {/* Profile */}
         <Card style={{ gap: spacing.md }}>
-          <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>Your profile</Text>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.text }}>Your profile</Text>
           <Field label="Your name" value={name} onChangeText={setName} placeholder="Alex" />
           <View style={{ gap: spacing.xs }}>
             <Text style={{ color: colors.textMuted, fontSize: font.small, fontWeight: "600" }}>Focus</Text>
@@ -245,7 +245,7 @@ export default function Settings() {
 
         {/* Notifications */}
         <Card style={{ gap: spacing.md }}>
-          <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>Daily reminders</Text>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.text }}>Daily reminders</Text>
           {!pushSupported() ? (
             <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
               Notifications aren't supported here. On iPhone, add DaybyDay to your Home Screen first
@@ -330,7 +330,7 @@ export default function Settings() {
 
         {/* Children */}
         <Card style={{ gap: spacing.md }}>
-          <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>Children</Text>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.text }}>Children</Text>
           {(me?.children ?? []).map((c) => (
             <View
               key={c.id}

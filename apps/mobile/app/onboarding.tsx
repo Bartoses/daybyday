@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { api, ApiError } from "../src/api-client";
 import { Button, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
-import { colors, font, radius, spacing } from "../src/theme";
+import { colors, font, fonts, radius, spacing } from "../src/theme";
 import { titleCase } from "../src/format";
 
 type Step = "welcome" | "parent" | "children" | "focus";
@@ -88,10 +88,10 @@ export default function Onboarding() {
         {step === "welcome" && (
           <View style={{ gap: spacing.xl }}>
             <View style={{ gap: spacing.sm }}>
-              <Text style={{ fontSize: font.display, fontWeight: "800", color: colors.text }}>
+              <Text style={{ fontFamily: fonts.display, fontSize: font.display, fontWeight: "600", color: colors.text }}>
                 Welcome to DaybyDay
               </Text>
-              <Text style={{ fontSize: font.heading, color: colors.text, lineHeight: 27 }}>
+              <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "500", color: colors.text, lineHeight: 28 }}>
                 One age-perfect parenting tip a day — so you always know the next small thing that helps.
               </Text>
             </View>
@@ -255,7 +255,7 @@ function ValueRow({ emoji, title, body }: { emoji: string; title: string; body: 
 function Header({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <View style={{ gap: spacing.xs }}>
-      <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text }}>{title}</Text>
+      <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>{title}</Text>
       <Text style={{ fontSize: font.body, color: colors.textMuted }}>{subtitle}</Text>
     </View>
   );

@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { api, ApiError, type Broadcast } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
 import { Select } from "../src/components/form";
-import { colors, font, radius, spacing } from "../src/theme";
+import { colors, font, fonts, radius, spacing } from "../src/theme";
 
 function pad(n: number): string {
   return String(n).padStart(2, "0");
@@ -122,7 +122,7 @@ export default function Admin() {
     <Screen style={{ padding: 0 }}>
       <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.xl, maxWidth: 600, width: "100%", alignSelf: "center" }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text }}>Admin · Broadcasts</Text>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>Admin · Broadcasts</Text>
           <Text onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))} style={{ color: colors.primary, fontSize: font.small }}>
             Done
           </Text>

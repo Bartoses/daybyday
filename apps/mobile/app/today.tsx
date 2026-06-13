@@ -6,7 +6,7 @@ import { api, ApiError } from "../src/api-client";
 import { useAuth } from "../src/auth";
 import { Button, Card, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
-import { colors, font, spacing, radius } from "../src/theme";
+import { colors, font, fonts, spacing, radius } from "../src/theme";
 import { titleCase, greeting, formatAge, contextualMoment } from "../src/format";
 
 type Child = MeResponse["children"][number];
@@ -110,7 +110,7 @@ export default function Today() {
         }}
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Text style={{ fontSize: font.heading, fontWeight: "800", color: colors.text }}>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>
             {greeting()}
             {me?.parent.name ? `, ${titleCase(me.parent.name)}` : ""}
           </Text>

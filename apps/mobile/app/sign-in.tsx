@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../src/auth";
 import { Button, Field, Screen } from "../src/components/ui";
-import { colors, font, spacing } from "../src/theme";
+import { colors, font, fonts, spacing } from "../src/theme";
 
 export default function SignIn() {
   const { signInWithPassword, signUp } = useAuth();
@@ -30,7 +30,7 @@ export default function SignIn() {
     <Screen style={{ justifyContent: "center" }}>
       <View style={{ gap: spacing.lg, maxWidth: 420, width: "100%", alignSelf: "center" }}>
         <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
-          <Text style={{ fontSize: font.display, fontWeight: "800", color: colors.text }}>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.display, fontWeight: "600", color: colors.text }}>
             DaybyDay
           </Text>
           <Text style={{ fontSize: font.body, color: colors.textMuted }}>

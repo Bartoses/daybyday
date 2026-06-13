@@ -5,7 +5,7 @@ import type { FeedCard, MeResponse } from "@daybyday/schemas";
 import { api, ApiError } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
-import { colors, font, radius, spacing } from "../src/theme";
+import { colors, font, fonts, radius, spacing } from "../src/theme";
 import { titleCase } from "../src/format";
 
 type Child = MeResponse["children"][number];
@@ -89,7 +89,7 @@ export default function Ask() {
         contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg, maxWidth: 600, width: "100%", alignSelf: "center" }}
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text }}>
+          <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>
             Ask{child ? ` about ${titleCase(child.name)}` : ""}
           </Text>
           <Text
