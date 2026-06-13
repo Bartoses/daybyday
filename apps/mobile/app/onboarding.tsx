@@ -5,6 +5,7 @@ import { api, ApiError } from "../src/api-client";
 import { Button, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
 import { colors, font, radius, spacing } from "../src/theme";
+import { titleCase } from "../src/format";
 
 type Step = "parent" | "children" | "focus";
 
@@ -37,7 +38,7 @@ export default function Onboarding() {
 
   function addDraft(): DraftChild[] {
     if (!draftValid || !draftIso) return children;
-    const next = [...children, { name: cName.trim(), iso: draftIso }];
+    const next = [...children, { name: titleCase(cName), iso: draftIso }];
     setChildren(next);
     setCName("");
     setCDate(EMPTY_DATE);
@@ -69,9 +70,9 @@ export default function Onboarding() {
     }
     setBusy(true);
     try {
-      await api.bootstrap({ name: name.trim(), focus_area: focus });
+      await api.bootstrap({ name: titleCase(name), focus_area: focus });
       for (const child of list) {
-        await api.createChild({ name: child.name, birthdate: child.iso });
+        await api.createChild({ name: titleCase(child.name), birthdate: child.iso });
       }
       await api.completeOnboarding();
       router.replace("/today");

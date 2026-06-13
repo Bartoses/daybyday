@@ -6,6 +6,7 @@ import { api, ApiError } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
 import { colors, font, radius, spacing } from "../src/theme";
+import { titleCase, formatAge } from "../src/format";
 
 type Child = MeResponse["children"][number];
 
@@ -46,7 +47,7 @@ export default function Settings() {
     setSavingProfile(true);
     setProfileSaved(false);
     try {
-      await api.updateProfile({ name: name.trim(), focus_area: focus ?? undefined });
+      await api.updateProfile({ name: titleCase(name), focus_area: focus ?? undefined });
       setProfileSaved(true);
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Could not save profile.");
@@ -64,7 +65,7 @@ export default function Settings() {
     }
     setAdding(true);
     try {
-      await api.createChild({ name: cName.trim(), birthdate: iso });
+      await api.createChild({ name: titleCase(cName), birthdate: iso });
       setCName("");
       setCDate(EMPTY_DATE);
       await refresh();
@@ -165,7 +166,7 @@ export default function Settings() {
               }}
             >
               <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>
-                {c.name}
+                {titleCase(c.name)}
                 <Text style={{ fontWeight: "400", color: colors.textMuted }}>
                   {c.age_days != null ? `  ·  ${formatAge(c.age_days)}` : ""}
                 </Text>
@@ -188,9 +189,3 @@ export default function Settings() {
   );
 }
 
-function formatAge(days: number): string {
-  if (days < 60) return `${days} days`;
-  const months = Math.floor(days / 30.4);
-  if (months < 24) return `${months} months`;
-  return `${Math.floor(days / 365)} yr`;
-}

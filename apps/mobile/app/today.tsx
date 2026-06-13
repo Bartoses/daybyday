@@ -7,6 +7,7 @@ import { useAuth } from "../src/auth";
 import { Button, Card, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
 import { colors, font, spacing, radius } from "../src/theme";
+import { titleCase, greeting, formatAge, contextualMoment } from "../src/format";
 
 type Child = MeResponse["children"][number];
 
@@ -95,6 +96,7 @@ export default function Today() {
   }
 
   const children = me?.children ?? [];
+  const moment = child ? contextualMoment(child.birthdate, child.name) : null;
 
   return (
     <Screen style={{ padding: 0 }}>
@@ -110,7 +112,7 @@ export default function Today() {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <Text style={{ fontSize: font.heading, fontWeight: "800", color: colors.text }}>
             {greeting()}
-            {me?.parent.name ? `, ${me.parent.name}` : ""}
+            {me?.parent.name ? `, ${titleCase(me.parent.name)}` : ""}
           </Text>
           <View style={{ flexDirection: "row", gap: spacing.md }}>
             <Text onPress={() => router.push("/settings")} style={{ color: colors.primary, fontSize: font.small }}>
@@ -140,7 +142,7 @@ export default function Today() {
                   }}
                 >
                   <Text style={{ color: active ? colors.onPrimary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
-                    {c.name}
+                    {titleCase(c.name)}
                   </Text>
                 </Pressable>
               );
@@ -150,10 +152,30 @@ export default function Today() {
 
         {child ? (
           <Text style={{ fontSize: font.small, color: colors.textMuted, marginTop: -spacing.sm }}>
-            {child.name}
+            {titleCase(child.name)}
             {child.age_days != null ? ` · ${formatAge(child.age_days)}` : ""}
             {child.stage ? ` · ${child.stage.replace(/_/g, " ")}` : ""}
           </Text>
+        ) : null}
+
+        {/* Time-aware moment: birthday, monthly milestone, or seasonal note */}
+        {moment ? (
+          <View
+            style={{
+              flexDirection: "row",
+              gap: spacing.md,
+              alignItems: "center",
+              backgroundColor: colors.surfaceAlt,
+              borderRadius: radius.button,
+              paddingVertical: spacing.md,
+              paddingHorizontal: spacing.lg,
+            }}
+          >
+            <Text style={{ fontSize: font.heading }}>{moment.emoji}</Text>
+            <Text style={{ flex: 1, fontSize: font.small, color: colors.text, lineHeight: 20 }}>
+              {moment.text}
+            </Text>
+          </View>
         ) : null}
 
         {error ? (
@@ -190,7 +212,7 @@ export default function Today() {
             }}
           >
             <Text style={{ fontSize: font.body, color: colors.text, fontWeight: "600" }}>
-              Ask about {child.name}…
+              Ask about {titleCase(child.name)}…
             </Text>
             <Text style={{ color: colors.primary, fontSize: font.body }}>→</Text>
           </Pressable>
@@ -214,16 +236,3 @@ export default function Today() {
   );
 }
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
-
-function formatAge(days: number): string {
-  if (days < 60) return `${days} days`;
-  const months = Math.floor(days / 30.4);
-  if (months < 24) return `${months} months`;
-  return `${Math.floor(days / 365)} yr`;
-}

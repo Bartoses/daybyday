@@ -6,6 +6,7 @@ import { api, ApiError } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
 import { colors, font, radius, spacing } from "../src/theme";
+import { titleCase } from "../src/format";
 
 type Child = MeResponse["children"][number];
 
@@ -89,7 +90,7 @@ export default function Ask() {
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
           <Text style={{ fontSize: font.title, fontWeight: "800", color: colors.text }}>
-            Ask{child ? ` about ${child.name}` : ""}
+            Ask{child ? ` about ${titleCase(child.name)}` : ""}
           </Text>
           <Text
             onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))}
@@ -117,7 +118,7 @@ export default function Ask() {
                   }}
                 >
                   <Text style={{ color: active ? colors.onPrimary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
-                    {c.name}
+                    {titleCase(c.name)}
                   </Text>
                 </Pressable>
               );
@@ -153,7 +154,7 @@ export default function Ask() {
               <Card>
                 <Text style={{ fontSize: font.body, color: colors.text, lineHeight: 23 }}>
                   We've saved your question. We don't have a perfect match yet, but your
-                  daily tips will keep adapting to {child?.name ?? "your child"}.
+                  daily tips will keep adapting to {child ? titleCase(child.name) : "your child"}.
                 </Text>
               </Card>
             ) : null}
