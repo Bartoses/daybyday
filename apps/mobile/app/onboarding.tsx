@@ -7,7 +7,8 @@ import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/compon
 import { colors, font, radius, spacing } from "../src/theme";
 import { titleCase } from "../src/format";
 
-type Step = "parent" | "children" | "focus";
+type Step = "welcome" | "parent" | "children" | "focus";
+const FORM_STEPS: Step[] = ["parent", "children", "focus"];
 
 const FOCUS_OPTIONS: Array<{ key: "daily_guidance" | "sleep_support" | "big_feelings"; label: string; hint: string }> = [
   { key: "daily_guidance", label: "Daily guidance", hint: "A little of everything, every day" },
@@ -21,11 +22,10 @@ interface DraftChild {
 }
 
 export default function Onboarding() {
-  const [step, setStep] = useState<Step>("parent");
+  const [step, setStep] = useState<Step>("welcome");
   const [name, setName] = useState("");
   const [focus, setFocus] = useState<(typeof FOCUS_OPTIONS)[number]["key"]>("daily_guidance");
 
-  // Multi-child: a confirmed list plus the in-progress draft.
   const [children, setChildren] = useState<DraftChild[]>([]);
   const [cName, setCName] = useState("");
   const [cDate, setCDate] = useState<DateParts>(EMPTY_DATE);
@@ -50,7 +50,6 @@ export default function Onboarding() {
   }
 
   function continueFromChildren() {
-    // Fold the current draft in (if filled), then require at least one child.
     const list = draftValid ? addDraft() : children;
     if (list.length === 0) {
       setError("Add at least one child to continue.");
@@ -85,10 +84,38 @@ export default function Onboarding() {
 
   return (
     <Screen>
-      <View style={{ gap: spacing.xl, maxWidth: 440, width: "100%", alignSelf: "center", flex: 1 }}>
+      <View style={{ gap: spacing.xl, maxWidth: 440, width: "100%", alignSelf: "center", flex: 1, justifyContent: step === "welcome" ? "center" : "flex-start" }}>
+        {step === "welcome" && (
+          <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.sm }}>
+              <Text style={{ fontSize: font.display, fontWeight: "800", color: colors.text }}>
+                Welcome to DaybyDay
+              </Text>
+              <Text style={{ fontSize: font.heading, color: colors.text, lineHeight: 27 }}>
+                One age-perfect parenting tip a day — so you always know the next small thing that helps.
+              </Text>
+            </View>
+
+            <View style={{ gap: spacing.md }}>
+              <ValueRow emoji="🌱" title="A fresh tip every day" body="Bite-sized and matched to your child's exact age and stage." />
+              <ValueRow emoji="💬" title="Ask anything, anytime" body="Get a real, relevant answer about your child in seconds." />
+              <ValueRow emoji="📈" title="It grows with them" body="From newborn nights to big-kid feelings — the whole journey." />
+            </View>
+
+            <View style={{ gap: spacing.sm }}>
+              <Button title="Get started" onPress={() => setStep("parent")} />
+              <Text style={{ fontSize: font.tiny, color: colors.textMuted, textAlign: "center" }}>
+                Takes about 2 minutes · Free · No spam
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {step !== "welcome" && <Progress current={step} />}
+
         {step === "parent" && (
           <View style={{ gap: spacing.lg }}>
-            <Header title="What should we call you?" subtitle="Your first name is enough." />
+            <Header title="First, what should we call you?" subtitle="Your first name is plenty." />
             <Field label="Your name" value={name} onChangeText={setName} placeholder="Alex" />
             <Button title="Continue" onPress={() => name.trim() && setStep("children")} disabled={!name.trim()} />
           </View>
@@ -98,7 +125,7 @@ export default function Onboarding() {
           <View style={{ gap: spacing.lg }}>
             <Header
               title="Tell us about your little one"
-              subtitle="We tailor each day to their age. Add as many children as you like."
+              subtitle="Their birthdate is how we tailor every tip. Add as many children as you like."
             />
 
             {children.length > 0 && (
@@ -146,17 +173,13 @@ export default function Onboarding() {
             </Pressable>
 
             {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
-            <Button
-              title="Continue"
-              onPress={continueFromChildren}
-              disabled={children.length === 0 && !draftValid}
-            />
+            <Button title="Continue" onPress={continueFromChildren} disabled={children.length === 0 && !draftValid} />
           </View>
         )}
 
         {step === "focus" && (
           <View style={{ gap: spacing.lg }}>
-            <Header title="What matters most right now?" subtitle="You can change this anytime." />
+            <Header title="What matters most right now?" subtitle="We'll lean your tips this way. You can change it anytime." />
             <View style={{ gap: spacing.sm }}>
               {FOCUS_OPTIONS.map((opt) => {
                 const selected = focus === opt.key;
@@ -173,13 +196,7 @@ export default function Onboarding() {
                       gap: 2,
                     }}
                   >
-                    <Text
-                      style={{
-                        color: colors.text,
-                        fontSize: font.body,
-                        fontWeight: selected ? "700" : "600",
-                      }}
-                    >
+                    <Text style={{ color: colors.text, fontSize: font.body, fontWeight: selected ? "700" : "600" }}>
                       {opt.label}
                     </Text>
                     <Text style={{ color: colors.textMuted, fontSize: font.small }}>{opt.hint}</Text>
@@ -188,11 +205,50 @@ export default function Onboarding() {
               })}
             </View>
             {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
-            <Button title="Start my first day" onPress={finish} loading={busy} />
+            <Button title="Show me today's tip" onPress={finish} loading={busy} />
+            <Text style={{ fontSize: font.tiny, color: colors.textMuted, textAlign: "center" }}>
+              You'll land on your first daily card — that's your home base every day.
+            </Text>
           </View>
         )}
       </View>
     </Screen>
+  );
+}
+
+function Progress({ current }: { current: Step }) {
+  const idx = FORM_STEPS.indexOf(current);
+  return (
+    <View style={{ gap: spacing.sm }}>
+      <Text style={{ fontSize: font.tiny, color: colors.textMuted, fontWeight: "600" }}>
+        Step {idx + 1} of {FORM_STEPS.length}
+      </Text>
+      <View style={{ flexDirection: "row", gap: spacing.xs }}>
+        {FORM_STEPS.map((_, i) => (
+          <View
+            key={i}
+            style={{
+              flex: 1,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: i <= idx ? colors.primary : colors.border,
+            }}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function ValueRow({ emoji, title, body }: { emoji: string; title: string; body: string }) {
+  return (
+    <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "flex-start" }}>
+      <Text style={{ fontSize: font.title }}>{emoji}</Text>
+      <View style={{ flex: 1, gap: 1 }}>
+        <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>{title}</Text>
+        <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>{body}</Text>
+      </View>
+    </View>
   );
 }
 

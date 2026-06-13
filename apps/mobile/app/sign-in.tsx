@@ -38,6 +38,21 @@ export default function SignIn() {
           </Text>
         </View>
 
+        {mode === "signup" ? (
+          <View style={{ gap: spacing.sm, marginBottom: spacing.sm }}>
+            {[
+              "🌱  One age-perfect tip a day",
+              "💬  Ask anything about your child",
+              "📈  Grows with them, newborn to big kid",
+            ].map((line) => (
+              <Text key={line} style={{ fontSize: font.body, color: colors.text }}>
+                {line}
+              </Text>
+            ))}
+            <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>Free · Takes 2 minutes to set up</Text>
+          </View>
+        ) : null}
+
         <Field
           label="Email"
           value={email}
