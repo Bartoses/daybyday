@@ -8,6 +8,15 @@ export function isAdmin(req: FastifyRequest, app: FastifyInstance): boolean {
   return Boolean(req.authEmail && req.authEmail === app.config.adminEmail);
 }
 
+/** Normalize a link: in-app "/path" kept; bare domain → https; empty → null. */
+function normalizeUrl(raw: string | undefined): string | null {
+  const v = (raw ?? "").trim();
+  if (!v) return null;
+  if (v.startsWith("/")) return v;
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://${v}`;
+}
+
 /** Admin-only broadcast scheduling (custom push messages). Gated by email. */
 export async function adminRoutes(app: FastifyInstance): Promise<void> {
   const auth = makeAuthPreHandler(app.config);
@@ -49,7 +58,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(400).send({ error: { code: "VALIDATION", message: "title, body, and a time are required" } });
     }
     const parent = await resolveParent(req);
-    const url = body.url?.trim() || null;
+    const url = normalizeUrl(body.url);
 
     const { data, error } = await app.db
       .from("broadcasts")

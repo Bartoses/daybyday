@@ -25,19 +25,37 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// Focus or open the app when a notification is tapped.
+// Focus or open the right destination when a notification is tapped.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/today";
+  let url = (event.notification.data && event.notification.data.url) || "/today";
+
+  // Normalize: a bare domain (espn.com / www.espn.com) becomes an https URL;
+  // a "/path" stays in-app; a full http(s) URL is used as-is.
+  if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+    url = "https://" + url;
+  }
+  const isExternal = /^https?:\/\//i.test(url);
+  const target = isExternal ? url : new URL(url, self.location.origin).href;
+
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+    (async () => {
+      if (isExternal) {
+        await self.clients.openWindow(target);
+        return;
+      }
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const client of clients) {
         if ("focus" in client) {
-          client.navigate(url);
+          try {
+            await client.navigate(target);
+          } catch (_e) {
+            /* navigation across states can throw; focus anyway */
+          }
           return client.focus();
         }
       }
-      return self.clients.openWindow(url);
-    }),
+      await self.clients.openWindow(target);
+    })(),
   );
 });
