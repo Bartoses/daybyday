@@ -134,7 +134,7 @@ describe("scoreCandidate", () => {
       sleep,
       makeInput({ temporal: null, preferredCategory: "sleep" }),
     )!;
-    expect(evening - noTemporal).toBe(12);
+    expect(evening - noTemporal).toBe(17);
   });
 
   it("does NOT time-boost a category that doesn't fit the hour (sleep at midday)", () => {

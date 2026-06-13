@@ -9,8 +9,12 @@ export const ENGINE_CONFIG = {
   defaultCooldownDays: 21,
   stageBoostWeight: 20,
   leapBoostWeight: 25,
-  /** Boost when a tip's category fits the current time of day (evening→sleep, etc.). */
-  timeOfDayBoost: 12,
+  /**
+   * Boost when a tip's category fits the current time of day (evening→sleep, etc.).
+   * Set to compete with the daily family-rotation boost (18) so time-of-day is a
+   * felt signal, while staying below stage (20) / leap (25) so age fit always wins.
+   */
+  timeOfDayBoost: 17,
   noveltyWeight: 15,
   categoryRotationPenalty: 18,
   rotationGroupPenalty: 12,
