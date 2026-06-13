@@ -8,6 +8,8 @@ const testConfig: AppConfig = {
   publicBaseUrl: "https://api.daybyday.test",
   twilio: { authToken: "secret", accountSid: "AC", phoneNumber: "+1", validate: true },
   supabase: { url: "https://x.supabase.co", anonKey: "anon", serviceRoleKey: "svc" },
+  vapid: { publicKey: "", privateKey: "", subject: "mailto:test@daybyday.test" },
+  cronSecret: "test-secret",
 };
 
 describe("API app", () => {

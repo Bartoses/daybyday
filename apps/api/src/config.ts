@@ -15,6 +15,13 @@ export interface AppConfig {
     anonKey: string;
     serviceRoleKey: string;
   };
+  vapid: {
+    publicKey: string;
+    privateKey: string;
+    subject: string;
+  };
+  /** Shared secret guarding internal cron endpoints. */
+  cronSecret: string;
 }
 
 function env(key: string, fallback = ""): string {
@@ -37,5 +44,11 @@ export function loadConfig(): AppConfig {
       anonKey: env("SUPABASE_ANON_KEY"),
       serviceRoleKey: env("SUPABASE_SERVICE_ROLE_KEY"),
     },
+    vapid: {
+      publicKey: env("VAPID_PUBLIC_KEY"),
+      privateKey: env("VAPID_PRIVATE_KEY"),
+      subject: env("VAPID_SUBJECT", "mailto:hello@daybyday.app"),
+    },
+    cronSecret: env("CRON_SECRET"),
   };
 }

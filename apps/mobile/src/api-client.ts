@@ -110,6 +110,19 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ child_id: childId, question }),
     }),
+
+  vapidKey: () => request<{ publicKey: string | null }>("/v1/push/vapid"),
+
+  pushSubscribe: (subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
+    request<{ ok: boolean }>("/v1/push/subscribe", {
+      method: "POST",
+      body: JSON.stringify({ subscription }),
+    }),
+
+  pushUnsubscribe: (endpoint: string) =>
+    request<void>("/v1/push/subscribe", { method: "DELETE", body: JSON.stringify({ endpoint }) }),
+
+  pushTest: () => request<{ sent: number }>("/v1/push/test", { method: "POST" }),
 };
 
 export { ApiError };

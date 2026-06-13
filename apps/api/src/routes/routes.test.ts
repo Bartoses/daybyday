@@ -8,6 +8,8 @@ const testConfig: AppConfig = {
   publicBaseUrl: "https://api.daybyday.test",
   twilio: { authToken: "secret", accountSid: "AC", phoneNumber: "+1", validate: true },
   supabase: { url: "https://x.supabase.co", anonKey: "anon", serviceRoleKey: "svc" },
+  vapid: { publicKey: "", privateKey: "", subject: "mailto:test@daybyday.test" },
+  cronSecret: "test-secret",
 };
 
 /**
@@ -29,6 +31,8 @@ describe("EPIC 4 routes are auth-gated", () => {
     ["GET", "/v1/faq?child_id=00000000-0000-0000-0000-000000000000"],
     ["POST", "/v1/questions", { child_id: "00000000-0000-0000-0000-000000000000", question: "why" }],
     ["GET", "/v1/questions"],
+    ["POST", "/v1/push/subscribe", { subscription: { endpoint: "x", keys: { p256dh: "a", auth: "b" } } }],
+    ["POST", "/v1/push/test"],
   ];
 
   it.each(cases)("%s %s -> 401 without a bearer token", async (method, url, payload) => {

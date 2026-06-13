@@ -7,6 +7,7 @@ import { Button, Card, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
 import { colors, font, radius, spacing } from "../src/theme";
 import { titleCase, formatAge } from "../src/format";
+import { enablePush, disablePush, getPushState, pushSupported, type PushState } from "../src/push";
 
 type Child = MeResponse["children"][number];
 
@@ -30,6 +31,11 @@ export default function Settings() {
   const [cDate, setCDate] = useState<DateParts>(EMPTY_DATE);
   const [error, setError] = useState<string | null>(null);
 
+  // Notifications
+  const [pushState, setPushState] = useState<PushState>("unsupported");
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushNote, setPushNote] = useState<string | null>(null);
+
   async function refresh() {
     const m = await api.me();
     setMe(m);
@@ -41,7 +47,37 @@ export default function Settings() {
     refresh()
       .catch(() => router.replace("/onboarding"))
       .finally(() => setLoading(false));
+    getPushState().then(setPushState);
   }, []);
+
+  async function toggleNotifications() {
+    setPushBusy(true);
+    setPushNote(null);
+    try {
+      if (pushState === "subscribed") {
+        await disablePush();
+      } else {
+        const res = await enablePush();
+        if (!res.ok) setPushNote(res.error ?? "Could not enable notifications.");
+      }
+      setPushState(await getPushState());
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
+  async function sendTest() {
+    setPushBusy(true);
+    setPushNote(null);
+    try {
+      const res = await api.pushTest();
+      setPushNote(`Sent to ${res.sent} device${res.sent === 1 ? "" : "s"} — check your notifications.`);
+    } catch (e) {
+      setPushNote(e instanceof ApiError ? e.message : "Could not send a test.");
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   async function saveProfile() {
     setSavingProfile(true);
@@ -147,6 +183,39 @@ export default function Settings() {
             </View>
           </View>
           <Button title={profileSaved ? "Saved ✓" : "Save profile"} onPress={saveProfile} loading={savingProfile} />
+        </Card>
+
+        {/* Notifications */}
+        <Card style={{ gap: spacing.md }}>
+          <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>Daily reminders</Text>
+          {!pushSupported() ? (
+            <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
+              Notifications aren't supported here. On iPhone, add DaybyDay to your Home Screen first
+              (Share → Add to Home Screen), then open it from there to enable reminders.
+            </Text>
+          ) : pushState === "denied" ? (
+            <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
+              Notifications are blocked in your browser settings. Re-enable them for this site, then refresh.
+            </Text>
+          ) : (
+            <>
+              <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
+                Get a gentle daily nudge with your tip — so you never miss a day.
+              </Text>
+              <Button
+                title={pushState === "subscribed" ? "Turn off reminders" : "Enable reminders"}
+                variant={pushState === "subscribed" ? "secondary" : "primary"}
+                onPress={toggleNotifications}
+                loading={pushBusy}
+              />
+              {pushState === "subscribed" ? (
+                <Button title="Send a test notification" variant="secondary" onPress={sendTest} loading={pushBusy} />
+              ) : null}
+            </>
+          )}
+          {pushNote ? (
+            <Text style={{ fontSize: font.small, color: colors.textMuted }}>{pushNote}</Text>
+          ) : null}
         </Card>
 
         {/* Children */}
