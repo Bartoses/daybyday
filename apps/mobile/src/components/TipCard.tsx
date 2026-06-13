@@ -11,6 +11,28 @@ function hasMore(card: FeedCard): boolean {
   );
 }
 
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/**
+ * Show the "Parents often wonder" prompt only when it's a genuine question that
+ * adds something — not a restatement of the insight (a lot of content repeats it).
+ */
+function showPrompt(card: FeedCard): boolean {
+  const prompt = card.follow_up_prompt?.trim();
+  if (!prompt || !prompt.includes("?")) return false;
+  const np = normalize(prompt);
+  const ni = normalize(card.insight);
+  return np !== ni && !np.includes(ni) && !ni.includes(np);
+}
+
+/** Show the focus tag only when it reads like a short label, not a sentence. */
+function showFocus(card: FeedCard): boolean {
+  const f = card.development_focus?.trim();
+  return Boolean(f && f.length <= 32 && !f.includes("."));
+}
+
 function LearnMoreRow({ label, body }: { label: string; body: string }) {
   return (
     <View style={{ gap: 2 }}>
@@ -118,7 +140,7 @@ export function TipCard({
         </Text>
       </View>
 
-      {card.follow_up_prompt ? (
+      {showPrompt(card) ? (
         <View style={{ gap: spacing.xs }}>
           <Text
             style={{
@@ -160,7 +182,7 @@ export function TipCard({
         </View>
       ) : null}
 
-      {card.development_focus ? (
+      {showFocus(card) ? (
         <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>✦ Supports {card.development_focus}</Text>
       ) : null}
 
