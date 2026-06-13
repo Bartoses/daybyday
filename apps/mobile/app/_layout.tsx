@@ -3,6 +3,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "../src/auth";
 import { colors } from "../src/theme";
+import "../src/install"; // registers the beforeinstallprompt listener early
 
 export default function RootLayout() {
   return (

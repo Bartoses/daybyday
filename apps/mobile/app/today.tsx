@@ -6,6 +6,7 @@ import { api, ApiError } from "../src/api-client";
 import { useAuth } from "../src/auth";
 import { Button, Card, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
+import { GrowthPrompt } from "../src/components/GrowthPrompt";
 import { colors, font, fonts, spacing, radius } from "../src/theme";
 import { titleCase, greeting, formatAge, contextualMoment } from "../src/format";
 
@@ -201,6 +202,9 @@ export default function Today() {
             <Text style={{ color: colors.textMuted }}>No tip available for this age yet.</Text>
           </Card>
         )}
+
+        {/* Install / notifications nudge — shown after the value (the card) */}
+        <GrowthPrompt />
 
         {/* Ask a question */}
         {child ? (
