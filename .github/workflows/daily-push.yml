@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Trigger daily-push endpoint
         run: |
-          curl -sS -X POST \
+          # --fail-with-body: a non-2xx (e.g. 403 from a CRON_SECRET mismatch)
+          # turns the step red instead of silently "succeeding".
+          curl -sS --fail-with-body -X POST \
             -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
             https://daybydayapi-production.up.railway.app/v1/internal/cron/daily-push

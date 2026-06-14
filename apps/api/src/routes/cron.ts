@@ -58,7 +58,11 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
     for (const p of (parents ?? []) as ParentRow[]) {
       const pref = prefsBy.get(p.id) ?? { parent_id: p.id, daily_enabled: true, send_hour: 8, categories: [] };
       if (!pref.daily_enabled || alreadySent.has(p.id)) continue;
-      if (localHour(now, p.timezone) !== pref.send_hour) continue;
+      // Send on the first run at/after the parent's local send hour (deduped to
+      // once/day below). Using >= rather than an exact match means a skipped
+      // scheduled run — GitHub Actions cron is best-effort — just delays the tip
+      // to the next run instead of dropping it for the whole day.
+      if (localHour(now, p.timezone) < pref.send_hour) continue;
       const child = firstChild.get(p.id);
       if (!child) continue;
 
