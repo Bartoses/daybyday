@@ -1,15 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  selectContentItem,
   renderCard,
-  leapContextForAge,
-  resolveFamilyCategory,
   ageDaysFromBirthdate,
   stageForAgeDays,
   dailyStageForAgeDays,
   selectDailyTip,
   type Candidate,
-  type HistoryEntry,
 } from "@daybyday/engine";
 import { STAGES, type Category } from "@daybyday/schemas";
 
@@ -108,42 +104,21 @@ async function loadDailyHistory(db: SupabaseClient, childId: string): Promise<st
     .filter(Boolean);
 }
 
-/** Recent message history for a child, most-recent-first, enriched with rotation_group. */
-async function loadHistory(
-  db: SupabaseClient,
-  childId: string,
-  content: ContentRow[],
-  lookbackDays: number,
-  now: Date,
-): Promise<HistoryEntry[]> {
-  const since = new Date(now.getTime() - lookbackDays * 86400000).toISOString();
+/**
+ * Every tip this child has been shown, most-recent first (repeats included, any
+ * channel/type). Powers least-seen-first rotation for quick-actions so a tap won't
+ * echo today's tip or a recent quick pick, and cycles the whole category first.
+ */
+async function loadShownHistory(db: SupabaseClient, childId: string): Promise<string[]> {
   const { data } = await db
     .from("messages")
-    .select("tip_id, category_family, sent_at, created_at, send_date")
+    .select("tip_id, created_at")
     .eq("child_id", childId)
-    .gte("created_at", since)
-    .order("created_at", { ascending: false });
-
-  const rotationByTip = new Map(content.map((c) => [c.tip_id, c.rotation_group] as const));
-
-  return (data ?? []).map((row): HistoryEntry => {
-    const r = row as Record<string, string | null>;
-    return {
-      tip_id: String(r["tip_id"] ?? ""),
-      sent_at: String(r["sent_at"] ?? r["created_at"] ?? r["send_date"] ?? ""),
-      topic: (r["category_family"] as Category | null) ?? null,
-      rotation_group: rotationByTip.get(String(r["tip_id"] ?? "")) ?? null,
-    };
-  });
-}
-
-/** Recent categories for a child (most-recent-first), for rotation. */
-function recentCategories(history: HistoryEntry[], limit: number): Category[] {
-  const out: Category[] = [];
-  for (const h of history) {
-    if (h.topic && !out.includes(h.topic) && out.length < limit) out.push(h.topic);
-  }
-  return out;
+    .order("created_at", { ascending: false })
+    .limit(600);
+  return ((data as { tip_id: string | null }[] | null) ?? [])
+    .map((r) => String(r.tip_id ?? ""))
+    .filter(Boolean);
 }
 
 function toCard(child: ChildRow, content: ContentRow, ageDays: number, now: Date): FeedCardResult {
@@ -224,35 +199,20 @@ export async function selectFeedCard(
     return toCard(child, chosen, ageDays, now);
   }
 
-  const history = await loadHistory(db, child.id, content, opts.lookbackDays ?? 45, now);
-
+  // Quick-action: least-seen-first within the requested category, so repeated taps
+  // cycle the whole stage pool before anything repeats (no more "slight variations").
+  const stageLabel = dailyStageForAgeDays(ageDays);
+  const stagePool = content.filter((c) => c.stage === stageLabel);
   const explicit = opts.requestedCategory ?? null;
-  const category = resolveFamilyCategory(
-    explicit,
-    parentId,
-    dateKey(now),
-    recentCategories(history, 4),
-    opts.isDaily,
-  );
+  let candidates = explicit ? stagePool.filter((c) => c.category === explicit) : stagePool;
+  // Never hard-fail: fall back to the whole stage pool, then all content.
+  if (candidates.length === 0) candidates = stagePool.length > 0 ? stagePool : content;
 
-  const stageLabel = stageLabelForAge(ageDays);
-  const stageKey = stageForAgeDays(ageDays);
-  // Pass both label + key so the stage boost fires regardless of which form the
-  // imported content stored (sheets used labels; schema enums use keys).
-  const preferredStages = [stageLabel, stageKey].filter((s): s is string => Boolean(s));
-
-  const chosen = selectContentItem(content, {
-    ageDays,
-    preferredCategory: category,
-    preferredStages,
-    history,
-    leapContext: leapContextForAge(ageDays),
-    temporal: { hour: localHour(now, opts.timezone) },
-    now,
-  });
-
+  const shown = await loadShownHistory(db, child.id);
+  // Distinct per-request seed so tie-breaks vary; least-seen-first does the rotating.
+  const chosen = selectDailyTip(candidates, shown, `${child.id}:qa:${now.getTime()}`);
   if (!chosen) return null;
-  return toCard(child, chosen as ContentRow, ageDays, now);
+  return toCard(child, chosen, ageDays, now);
 }
 
 /** Find the content row for a tip_id (to re-render a previously logged card). */
