@@ -27,7 +27,8 @@ let tmpSeq = 0;
 const tmpId = () => `tmp-${Date.now()}-${tmpSeq++}`;
 
 export default function AskDay() {
-  const params = useLocalSearchParams<{ child_id?: string }>();
+  const params = useLocalSearchParams<{ child_id?: string; q?: string }>();
+  const didAutoSend = useRef(false);
   const [parentName, setParentName] = useState("");
   const [children, setChildren] = useState<Child[]>([]);
   const [child, setChild] = useState<Child | null>(null);
@@ -67,6 +68,14 @@ export default function AskDay() {
     const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
     return () => clearTimeout(t);
   }, [messages, streaming]);
+
+  // Auto-send a question passed in (e.g. "Ask Day about this" from the timeline).
+  useEffect(() => {
+    if (child && params.q && !didAutoSend.current) {
+      didAutoSend.current = true;
+      void send(params.q);
+    }
+  }, [child]);
 
   async function send(text: string) {
     const q = text.trim();

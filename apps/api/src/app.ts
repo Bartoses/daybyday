@@ -8,6 +8,7 @@ import { childrenRoutes } from "./routes/children.js";
 import { feedRoutes } from "./routes/feed.js";
 import { questionRoutes } from "./routes/questions.js";
 import { dayRoutes } from "./routes/day.js";
+import { milestoneRoutes } from "./routes/milestones.js";
 import { pushRoutes } from "./routes/push.js";
 import { notificationRoutes } from "./routes/notifications.js";
 import { cronRoutes } from "./routes/cron.js";
@@ -67,6 +68,7 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
   app.register(feedRoutes);
   app.register(questionRoutes);
   app.register(dayRoutes);
+  app.register(milestoneRoutes);
   app.register(pushRoutes);
   app.register(notificationRoutes);
   app.register(cronRoutes);

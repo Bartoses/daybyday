@@ -228,6 +228,28 @@ export default function Today() {
           </Pressable>
         ) : null}
 
+        {/* Milestones timeline */}
+        {child ? (
+          <Pressable
+            onPress={() => router.push({ pathname: "/timeline", params: { child_id: child.id } })}
+            style={{
+              borderRadius: radius.button,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+              padding: spacing.lg,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: font.body, color: colors.text, fontWeight: "600" }}>
+              {titleCase(child.name)}'s milestones
+            </Text>
+            <Text style={{ color: colors.primary, fontSize: font.body }}>→</Text>
+          </Pressable>
+        ) : null}
+
         {/* Quick actions */}
         <View style={{ gap: spacing.sm }}>
           <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>

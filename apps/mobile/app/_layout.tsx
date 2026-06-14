@@ -25,6 +25,7 @@ export default function RootLayout() {
           <Stack.Screen name="today" options={{ title: "Today" }} />
           <Stack.Screen name="settings" options={{ title: "Settings" }} />
           <Stack.Screen name="ask" options={{ title: "Ask Day" }} />
+          <Stack.Screen name="timeline" options={{ title: "Milestones" }} />
           <Stack.Screen name="admin" options={{ title: "Admin" }} />
         </Stack>
       </AuthProvider>

@@ -108,6 +108,22 @@ export const api = {
   dayHistory: () =>
     request<{ messages: DayMessage[]; limit: number }>("/v1/day/messages"),
 
+  milestones: (childId: string) =>
+    request<{ child_id: string; age_months: number; milestones: MilestoneItem[] }>(
+      `/v1/milestones?child_id=${encodeURIComponent(childId)}`,
+    ),
+
+  achieveMilestone: (key: string, childId: string, achievedOn?: string) =>
+    request<void>(`/v1/milestones/${encodeURIComponent(key)}`, {
+      method: "POST",
+      body: JSON.stringify({ child_id: childId, achieved_on: achievedOn }),
+    }),
+
+  unachieveMilestone: (key: string, childId: string) =>
+    request<void>(`/v1/milestones/${encodeURIComponent(key)}?child_id=${encodeURIComponent(childId)}`, {
+      method: "DELETE",
+    }),
+
   ask: (childId: string, question: string) =>
     request<{ question_id: string; matched: boolean; answer: FeedCard | null }>("/v1/questions", {
       method: "POST",
@@ -164,6 +180,18 @@ export interface Broadcast {
   status: "scheduled" | "sent" | "canceled";
   sent_at?: string | null;
   sent_count?: number | null;
+}
+
+export interface MilestoneItem {
+  key: string;
+  label: string;
+  description: string;
+  category: string;
+  age_months: number;
+  age_label: string;
+  status: "done" | "past" | "now" | "upcoming";
+  achieved_on: string | null;
+  ask_prompt: string;
 }
 
 export interface DayMessage {
