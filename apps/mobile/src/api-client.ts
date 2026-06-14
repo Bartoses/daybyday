@@ -105,6 +105,9 @@ export const api = {
   faq: (childId: string) =>
     request<{ questions: string[] }>(`/v1/faq?child_id=${encodeURIComponent(childId)}`),
 
+  dayHistory: () =>
+    request<{ messages: DayMessage[]; limit: number }>("/v1/day/messages"),
+
   ask: (childId: string, question: string) =>
     request<{ question_id: string; matched: boolean; answer: FeedCard | null }>("/v1/questions", {
       method: "POST",
@@ -161,6 +164,83 @@ export interface Broadcast {
   status: "scheduled" | "sent" | "canceled";
   sent_at?: string | null;
   sent_count?: number | null;
+}
+
+export interface DayMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  child_id: string | null;
+  created_at: string;
+}
+
+/**
+ * Ask "Day" a question and stream the reply. Reads the SSE response with a fetch
+ * ReadableStream (so we can send the bearer token, which EventSource can't).
+ * Calls onDelta for each text chunk and resolves with the full reply.
+ * Throws ApiError on the daily limit (402) or when Day isn't configured (503).
+ */
+export async function dayChat(
+  message: string,
+  childId: string | null,
+  onDelta: (text: string) => void,
+  signal?: AbortSignal,
+): Promise<string> {
+  const t = await token();
+  const res = await fetch(`${BASE_URL}/v1/day/chat`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(t ? { authorization: `Bearer ${t}` } : {}),
+    },
+    body: JSON.stringify({ message, child_id: childId ?? undefined }),
+    signal,
+  });
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const err = (body.error ?? {}) as { code?: string; message?: string };
+    throw new ApiError(res.status, err.code ?? "INTERNAL", err.message ?? `API ${res.status}`);
+  }
+
+  let full = "";
+  const handleEvent = (raw: string) => {
+    const line = raw.startsWith("data:") ? raw.slice(5).trim() : raw.trim();
+    if (!line) return;
+    let evt: { type?: string; text?: string; message?: string };
+    try {
+      evt = JSON.parse(line);
+    } catch {
+      return;
+    }
+    if (evt.type === "delta" && evt.text) {
+      full += evt.text;
+      onDelta(evt.text);
+    } else if (evt.type === "error") {
+      throw new ApiError(500, "DAY_ERROR", evt.message ?? "Day had trouble answering.");
+    }
+  };
+
+  // Stream incrementally when the platform supports it; otherwise parse the whole body.
+  if (res.body && typeof (res.body as ReadableStream).getReader === "function") {
+    const reader = (res.body as ReadableStream<Uint8Array>).getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() ?? "";
+      for (const part of parts) handleEvent(part);
+    }
+    if (buffer) handleEvent(buffer);
+  } else {
+    const text = await res.text();
+    for (const part of text.split("\n\n")) handleEvent(part);
+  }
+
+  return full;
 }
 
 export { ApiError };

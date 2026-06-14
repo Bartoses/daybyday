@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
     "@daybyday/db": "workspace:*",
     "@daybyday/engine": "workspace:*",
     "@daybyday/schemas": "workspace:*",

@@ -1,28 +1,33 @@
 /**
- * Design tokens — ported from docs/04-DESIGN-SYSTEM.md.
- * Brand: friendly, premium, calm. Sage green + warm peach on warm off-white.
+ * Design tokens — DaybyDay v1 visual language.
+ * Warm & calm: coral primary on a warm sand background, navy serif headings,
+ * cream cards, peach + sage soft fills. Display serif = Newsreader, UI = Hanken Grotesk.
  */
 export const colors = {
-  bg: "#FBF9F6",
-  surface: "#FFFFFF",
-  surfaceAlt: "#F3EFE9",
-  primary: "#6B8F71",
-  primaryPress: "#557159",
-  primarySoft: "#E8EFE9", // light sage tint for the action block
-  accent: "#E8A87C",
-  text: "#2B2B2A",
-  textMuted: "#6E6A64",
-  success: "#5C9A6B",
+  bg: "#E7E2D9", // warm sand app background
+  surface: "#FFFFFF", // white cards
+  surfaceAlt: "#FAF4EC", // cream cards on warm bg
+  primary: "#E07E5F", // coral — primary actions, brand
+  primaryPress: "#C9694B", // coral-deep — pressed/hover, links on light
+  primarySoft: "#FBEAE0", // peach — coral chips / soft fills
+  accent: "#7F9C7B", // sage — success, secondary accent
+  accentSoft: "#E8EFE4", // sage tint
+  heading: "#233152", // navy — headings, dark surfaces
+  text: "#2A2A2E", // ink — body text
+  textMuted: "#6E665C", // secondary text
+  textFaint: "#8A8276", // tertiary text
+  success: "#7F9C7B",
   warning: "#D9A441",
   danger: "#C2685A",
-  border: "#E7E1D8",
+  border: "#EADFCF", // hairlines on cream
+  inputBorder: "#E4D9CB", // input outlines
   onPrimary: "#FFFFFF",
 } as const;
 
 /** Display serif (headlines) + body. Loaded via the web <link> in app/+html.tsx. */
 export const fonts = {
-  display: 'Fraunces, Georgia, "Times New Roman", serif',
-  body: 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif',
+  display: 'Newsreader, Georgia, "Times New Roman", serif',
+  body: '"Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif',
 } as const;
 
 /** Per-category chip styling for quick visual recognition. */
@@ -49,7 +54,8 @@ export const spacing = {
 
 export const radius = {
   card: 20,
-  button: 14,
+  button: 16,
+  buttonSm: 12,
   pill: 999,
 } as const;
 
@@ -62,13 +68,22 @@ export const font = {
   tiny: 12,
 } as const;
 
-/** Soft shadow (y2 blur8 ~8%). Works on web + native. */
+/** Soft, low-opacity navy-tinted shadow. Works on web + native. */
 export const shadow = {
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.08,
-  shadowRadius: 8,
+  shadowColor: "#233152",
+  shadowOffset: { width: 0, height: 8 },
+  shadowOpacity: 0.1,
+  shadowRadius: 18,
   elevation: 2,
+} as const;
+
+/** Coral-tinted shadow for primary buttons (matches the design's CTA glow). */
+export const coralShadow = {
+  shadowColor: "#E07E5F",
+  shadowOffset: { width: 0, height: 12 },
+  shadowOpacity: 0.45,
+  shadowRadius: 20,
+  elevation: 4,
 } as const;
 
 /** Human-friendly labels for the content categories. */

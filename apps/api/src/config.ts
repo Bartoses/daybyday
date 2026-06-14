@@ -24,6 +24,13 @@ export interface AppConfig {
   cronSecret: string;
   /** Email allowed to access admin endpoints. */
   adminEmail: string;
+  /** "Day" AI assistant (Anthropic). */
+  day: {
+    apiKey: string;
+    model: string;
+    /** Assistant replies a free-tier parent gets per day. 0 = unlimited. */
+    freeDailyLimit: number;
+  };
 }
 
 function env(key: string, fallback = ""): string {
@@ -53,5 +60,10 @@ export function loadConfig(): AppConfig {
     },
     cronSecret: env("CRON_SECRET"),
     adminEmail: env("ADMIN_EMAIL", "bartoses1@gmail.com").toLowerCase(),
+    day: {
+      apiKey: env("ANTHROPIC_API_KEY"),
+      model: env("DAY_MODEL", "claude-sonnet-4-6"),
+      freeDailyLimit: Number(env("DAY_FREE_DAILY_LIMIT", "10")),
+    },
   };
 }

@@ -31,6 +31,12 @@ export {
   type TemporalContext,
 } from "./score.js";
 export { renderCard, type RenderedCard } from "./render.js";
+export {
+  DAILY_STAGES,
+  dailyStageForAgeDays,
+  selectDailyTip,
+  type DailyTipCandidate,
+} from "./daily.js";
 
 // Re-export stage helpers from schemas so consumers have one engine entry point.
 export { stageForAgeDays, ageDaysFromBirthdate } from "@daybyday/schemas";

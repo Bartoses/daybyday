@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider } from "../src/auth";
-import { colors } from "../src/theme";
+import { colors, fonts } from "../src/theme";
 import "../src/install"; // registers the beforeinstallprompt listener early
 
 export default function RootLayout() {
@@ -14,9 +14,9 @@ export default function RootLayout() {
           screenOptions={{
             headerStyle: { backgroundColor: colors.bg },
             headerShadowVisible: false,
-            headerTintColor: colors.text,
+            headerTintColor: colors.heading,
             contentStyle: { backgroundColor: colors.bg },
-            headerTitleStyle: { fontWeight: "700" },
+            headerTitleStyle: { fontFamily: fonts.display, fontWeight: "600", color: colors.heading },
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -24,7 +24,7 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" options={{ title: "Welcome" }} />
           <Stack.Screen name="today" options={{ title: "Today" }} />
           <Stack.Screen name="settings" options={{ title: "Settings" }} />
-          <Stack.Screen name="ask" options={{ title: "Ask" }} />
+          <Stack.Screen name="ask" options={{ title: "Ask Day" }} />
           <Stack.Screen name="admin" options={{ title: "Admin" }} />
         </Stack>
       </AuthProvider>

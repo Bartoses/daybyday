@@ -133,7 +133,7 @@ export function TipCard({
           fontFamily: fonts.display,
           fontSize: 27,
           fontWeight: "600",
-          color: colors.text,
+          color: colors.heading,
           lineHeight: 36,
           letterSpacing: -0.2,
         }}

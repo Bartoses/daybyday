@@ -6,6 +6,8 @@ import {
   resolveFamilyCategory,
   ageDaysFromBirthdate,
   stageForAgeDays,
+  dailyStageForAgeDays,
+  selectDailyTip,
   type Candidate,
   type HistoryEntry,
 } from "@daybyday/engine";
@@ -13,6 +15,7 @@ import { STAGES, type Category } from "@daybyday/schemas";
 
 /** content_items row enriched with the render fields. */
 interface ContentRow extends Candidate {
+  daily_eligible: boolean;
   insight: string;
   action_tip: string;
   reassurance: string;
@@ -54,7 +57,7 @@ export interface FeedCardResult {
 }
 
 const CONTENT_COLUMNS =
-  "tip_id, category, rotation_group, stage, age_min_days, age_max_days, priority_weight, cooldown_days, difficulty_level, active, insight, action_tip, reassurance, when_to_consult_doctor, signs_of_healthy_development, common_misunderstanding, development_focus, follow_up_prompt, youtube_resource_title, youtube_resource_link";
+  "tip_id, category, rotation_group, stage, age_min_days, age_max_days, priority_weight, cooldown_days, difficulty_level, active, daily_eligible, insight, action_tip, reassurance, when_to_consult_doctor, signs_of_healthy_development, common_misunderstanding, development_focus, follow_up_prompt, youtube_resource_title, youtube_resource_link";
 
 /** Stage label for an age, matching the legacy getStageForAgeDays output. */
 function stageLabelForAge(ageDays: number): string | null {
@@ -75,9 +78,34 @@ export function dateKey(now: Date): string {
 }
 
 async function loadActiveContent(db: SupabaseClient): Promise<ContentRow[]> {
-  const { data, error } = await db.from("content_items").select(CONTENT_COLUMNS).eq("active", true);
+  // The serving layer draws only from the curated daily-eligible pool; the legacy
+  // library stays in the table (daily_eligible = false) but dormant.
+  const { data, error } = await db
+    .from("content_items")
+    .select(CONTENT_COLUMNS)
+    .eq("active", true)
+    .eq("daily_eligible", true);
   if (error) throw new Error(`content_items load failed: ${error.message}`);
   return (data as ContentRow[] | null) ?? [];
+}
+
+/**
+ * This child's past daily picks, most-recent first (repeats included). Powers the
+ * rotation's recency window + times-shown counts. Read from `messages`, which
+ * already logs one daily pick per child per day (see messages_daily_unique_idx).
+ */
+async function loadDailyHistory(db: SupabaseClient, childId: string): Promise<string[]> {
+  const { data } = await db
+    .from("messages")
+    .select("tip_id, send_date, created_at")
+    .eq("child_id", childId)
+    .eq("message_type", "daily")
+    .order("send_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(400);
+  return ((data as { tip_id: string | null }[] | null) ?? [])
+    .map((r) => String(r.tip_id ?? ""))
+    .filter(Boolean);
 }
 
 /** Recent message history for a child, most-recent-first, enriched with rotation_group. */
@@ -182,6 +210,20 @@ export async function selectFeedCard(
   const now = opts.now ?? new Date();
   const ageDays = childAgeDays(child, now);
   const content = await loadActiveContent(db);
+
+  // Daily tip: stage-relative cooldown + least-seen-first (DAILY_TIP_ROTATION_SPEC).
+  // Draws from the child's current-stage pool only; quick-actions keep the richer
+  // category/leap/time-of-day engine below.
+  if (opts.isDaily) {
+    const stageLabel = dailyStageForAgeDays(ageDays);
+    const stagePool = content.filter((c) => c.stage === stageLabel);
+    const candidates = stagePool.length > 0 ? stagePool : content; // never hard-fail
+    const dailyHistory = await loadDailyHistory(db, child.id);
+    const chosen = selectDailyTip(candidates, dailyHistory, `${child.id}:${dateKey(now)}`);
+    if (!chosen) return null;
+    return toCard(child, chosen, ageDays, now);
+  }
+
   const history = await loadHistory(db, child.id, content, opts.lookbackDays ?? 45, now);
 
   const explicit = opts.requestedCategory ?? null;

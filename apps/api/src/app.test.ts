@@ -11,6 +11,7 @@ const testConfig: AppConfig = {
   vapid: { publicKey: "", privateKey: "", subject: "mailto:test@daybyday.test" },
   cronSecret: "test-secret",
   adminEmail: "admin@daybyday.test",
+  day: { apiKey: "", model: "claude-sonnet-4-6", freeDailyLimit: 10 },
 };
 
 describe("API app", () => {

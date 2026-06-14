@@ -46,6 +46,7 @@ export interface ContentItemInsert {
   book_resource: string | null;
   research_reference: string | null;
   active: boolean;
+  daily_eligible: boolean;
 }
 
 /** Port of cleanText: String(value).trim() */
@@ -178,6 +179,15 @@ export function normalizeRow(
   row: string[],
   rowIndex: number,
 ): ContentItemInsert | null {
+  // Daily-pool gate: when the sheet distinguishes content types (the new Knowledge
+  // export has daily_guidance / reply_guidance / support_answer), import ONLY the
+  // curated daily tips. Older single-purpose exports omit these columns, so absent
+  // columns mean "keep" — backward compatible.
+  const contentType = clean(getCell(headers, row, ["content_type"]));
+  if (contentType && contentType !== "daily_guidance") return null;
+  const dailyEligibleCell = getCell(headers, row, ["daily_eligible"]);
+  if (dailyEligibleCell !== "" && !parseBool(dailyEligibleCell, true)) return null;
+
   const ageMin = Number(
     getCell(headers, row, ["child_age_days_min", "age_min_days", "min_age_days"]) || 0,
   );
@@ -251,9 +261,11 @@ export function normalizeRow(
     difficulty_level: normalizeDifficulty(getCell(headers, row, ["difficulty_level"])),
     rotation_group:
       nullIfEmpty(clean(getCell(headers, row, ["rotation_group"]))) ?? category,
-    priority_weight: Number(getCell(headers, row, ["priority_weight"]) || 1),
+    priority_weight: Number(getCell(headers, row, ["priority_weight", "priority"]) || 1),
     cooldown_days: Number(getCell(headers, row, ["cooldown_days"]) || 21),
-    message_type: clean(getCell(headers, row, ["message_type"])) || "daily",
+    // Gated rows are all daily tips; the new sheet's message_type column mirrors
+    // content_type ("daily_guidance"), so normalize it to the app's "daily".
+    message_type: "daily",
     milestone_key: nullIfEmpty(clean(getCell(headers, row, ["milestone_key"]))),
     checkin_question: nullIfEmpty(clean(getCell(headers, row, ["checkin_question"]))),
     reply_options: nullIfEmpty(clean(getCell(headers, row, ["reply_options"]))),
@@ -266,5 +278,7 @@ export function normalizeRow(
     book_resource: nullIfEmpty(clean(getCell(headers, row, ["book_resource"]))),
     research_reference: nullIfEmpty(clean(getCell(headers, row, ["research_reference"]))),
     active: activeRaw === "" ? true : parseBool(activeRaw, true),
+    // Any row that passed the gate above is a daily tip; mark it for the rotation pool.
+    daily_eligible: true,
   };
 }
