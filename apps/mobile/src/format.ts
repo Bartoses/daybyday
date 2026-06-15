@@ -25,7 +25,7 @@ export function formatAge(days: number): string {
 
 function parseDateOnly(value: string): Date {
   const [y, m, d] = value.split("-").map(Number);
-  return new Date((y ?? 1970), (m ?? 1) - 1, d ?? 1);
+  return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
 }
 
 function wholeDaysBetween(a: Date, b: Date): number {
@@ -45,12 +45,24 @@ function ordinal(n: number): string {
 function seasonNote(month: number, name: string): { emoji: string; text: string } {
   // Northern-hemisphere seasons (month is 0-indexed).
   if (month <= 1 || month === 11)
-    return { emoji: "❄️", text: `Cozy winter days are perfect for indoor play and warm routines with ${name}.` };
+    return {
+      emoji: "❄️",
+      text: `Cozy winter days are perfect for indoor play and warm routines with ${name}.`,
+    };
   if (month <= 4)
-    return { emoji: "🌱", text: `Spring is here — a great time for ${name} to explore puddles, plants, and fresh air.` };
+    return {
+      emoji: "🌱",
+      text: `Spring is here — a great time for ${name} to explore puddles, plants, and fresh air.`,
+    };
   if (month <= 7)
-    return { emoji: "☀️", text: `Summer days mean water play and shade-safe outdoor time for ${name}.` };
-  return { emoji: "🍂", text: `Autumn is a lovely time for crunchy leaves and slower, snuggly evenings with ${name}.` };
+    return {
+      emoji: "☀️",
+      text: `Summer days mean water play and shade-safe outdoor time for ${name}.`,
+    };
+  return {
+    emoji: "🍂",
+    text: `Autumn is a lovely time for crunchy leaves and slower, snuggly evenings with ${name}.`,
+  };
 }
 
 export interface Moment {
@@ -73,7 +85,10 @@ export function contextualMoment(
   const birth = parseDateOnly(birthdate);
   const ageDays = wholeDaysBetween(birth, now);
   if (ageDays < 0) {
-    return { emoji: "🤰", text: `Counting down to meeting ${name}. Rest and nourishment matter most now.` };
+    return {
+      emoji: "🤰",
+      text: `Counting down to meeting ${name}. Rest and nourishment matter most now.`,
+    };
   }
 
   const months = Math.floor(ageDays / 30.44);
@@ -82,11 +97,15 @@ export function contextualMoment(
 
   // Days until the next birthday.
   let nextBday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
-  if (wholeDaysBetween(now, nextBday) < 0) nextBday = new Date(now.getFullYear() + 1, birth.getMonth(), birth.getDate());
+  if (wholeDaysBetween(now, nextBday) < 0)
+    nextBday = new Date(now.getFullYear() + 1, birth.getMonth(), birth.getDate());
   const daysToBday = wholeDaysBetween(now, nextBday);
 
   if (isBirthdayToday && turningAge >= 1) {
-    return { emoji: "🎂", text: `Happy ${ordinal(turningAge)} birthday, ${name}! What a year of growing.` };
+    return {
+      emoji: "🎂",
+      text: `Happy ${ordinal(turningAge)} birthday, ${name}! What a year of growing.`,
+    };
   }
   if (daysToBday > 0 && daysToBday <= 14) {
     return {

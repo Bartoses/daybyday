@@ -33,30 +33,53 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
 
     // Only consider parents who have at least one push subscription.
     const { data: subRows } = await app.db.from("web_push_subscriptions").select("parent_id");
-    const parentIds = [...new Set((subRows ?? []).map((r) => (r as { parent_id: string }).parent_id))];
+    const parentIds = [
+      ...new Set((subRows ?? []).map((r) => (r as { parent_id: string }).parent_id)),
+    ];
 
     const considered0 = parentIds.length === 0;
     const [{ data: parents }, { data: prefs }, { data: children }, { data: sentRows }] = considered0
       ? [{ data: [] }, { data: [] }, { data: [] }, { data: [] }]
       : await Promise.all([
-      app.db.from("parents").select("id, name, timezone").in("id", parentIds),
-      app.db.from("notification_prefs").select("parent_id, daily_enabled, send_hour, categories").in("parent_id", parentIds),
-      app.db.from("children").select("id, parent_id, name, birthdate, due_date, created_at").in("parent_id", parentIds).order("created_at", { ascending: true }),
-      app.db.from("messages").select("parent_id").eq("message_type", "daily_push").eq("send_date", today).in("parent_id", parentIds),
-    ]);
+          app.db.from("parents").select("id, name, timezone").in("id", parentIds),
+          app.db
+            .from("notification_prefs")
+            .select("parent_id, daily_enabled, send_hour, categories")
+            .in("parent_id", parentIds),
+          app.db
+            .from("children")
+            .select("id, parent_id, name, birthdate, due_date, created_at")
+            .in("parent_id", parentIds)
+            .order("created_at", { ascending: true }),
+          app.db
+            .from("messages")
+            .select("parent_id")
+            .eq("message_type", "daily_push")
+            .eq("send_date", today)
+            .in("parent_id", parentIds),
+        ]);
 
-    const prefsBy = new Map<string, PrefRow>((prefs ?? []).map((p) => [(p as PrefRow).parent_id, p as PrefRow]));
+    const prefsBy = new Map<string, PrefRow>(
+      (prefs ?? []).map((p) => [(p as PrefRow).parent_id, p as PrefRow]),
+    );
     const firstChild = new Map<string, ChildRow>();
     for (const c of (children ?? []) as Array<ChildRow & { parent_id: string }>) {
       if (!firstChild.has(c.parent_id)) firstChild.set(c.parent_id, c);
     }
-    const alreadySent = new Set((sentRows ?? []).map((r) => (r as { parent_id: string }).parent_id));
+    const alreadySent = new Set(
+      (sentRows ?? []).map((r) => (r as { parent_id: string }).parent_id),
+    );
 
     let considered = 0;
     let sent = 0;
 
     for (const p of (parents ?? []) as ParentRow[]) {
-      const pref = prefsBy.get(p.id) ?? { parent_id: p.id, daily_enabled: true, send_hour: 8, categories: [] };
+      const pref = prefsBy.get(p.id) ?? {
+        parent_id: p.id,
+        daily_enabled: true,
+        send_hour: 8,
+        categories: [],
+      };
       if (!pref.daily_enabled || alreadySent.has(p.id)) continue;
       // Send on the first run at/after the parent's local send hour (deduped to
       // once/day below). Using >= rather than an exact match means a skipped
@@ -111,7 +134,12 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
       .lte("scheduled_for", now.toISOString());
 
     let broadcastsSent = 0;
-    for (const b of (dueBroadcasts ?? []) as Array<{ id: string; title: string; body: string; url: string | null }>) {
+    for (const b of (dueBroadcasts ?? []) as Array<{
+      id: string;
+      title: string;
+      body: string;
+      url: string | null;
+    }>) {
       const count = await sendBroadcastToAll(app.db, app.config, b);
       await app.db
         .from("broadcasts")

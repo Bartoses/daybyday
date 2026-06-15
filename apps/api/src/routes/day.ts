@@ -22,7 +22,9 @@ function isPremium(parent: ParentRow): boolean {
 
 /** ISO start of the current UTC day, for the per-day free-message count. */
 function startOfUtcDay(now: Date): string {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  ).toISOString();
 }
 
 async function loadChildren(app: FastifyInstance, parentId: string): Promise<DayChildContext[]> {
@@ -62,9 +64,12 @@ export async function dayRoutes(app: FastifyInstance): Promise<void> {
     const parent = req.parent!;
     const client = makeDayClient(app.config);
     if (!client) {
-      return reply
-        .code(503)
-        .send({ error: { code: "DAY_UNAVAILABLE", message: "Day isn't set up yet. (Missing ANTHROPIC_API_KEY.)" } });
+      return reply.code(503).send({
+        error: {
+          code: "DAY_UNAVAILABLE",
+          message: "Day isn't set up yet. (Missing ANTHROPIC_API_KEY.)",
+        },
+      });
     }
 
     const now = new Date();
@@ -99,7 +104,9 @@ export async function dayRoutes(app: FastifyInstance): Promise<void> {
       .eq("parent_id", parent.id)
       .order("created_at", { ascending: false })
       .limit(HISTORY_FOR_CONTEXT);
-    const history = (((hist as { role: "user" | "assistant"; content: string }[] | null) ?? []).reverse());
+    const history = (
+      (hist as { role: "user" | "assistant"; content: string }[] | null) ?? []
+    ).reverse();
 
     const messages = [
       ...history.map((m) => ({ role: m.role, content: m.content })),

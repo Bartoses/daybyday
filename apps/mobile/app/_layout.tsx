@@ -16,7 +16,11 @@ export default function RootLayout() {
             headerShadowVisible: false,
             headerTintColor: colors.heading,
             contentStyle: { backgroundColor: colors.bg },
-            headerTitleStyle: { fontFamily: fonts.display, fontWeight: "600", color: colors.heading },
+            headerTitleStyle: {
+              fontFamily: fonts.display,
+              fontWeight: "600",
+              color: colors.heading,
+            },
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />

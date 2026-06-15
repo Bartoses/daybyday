@@ -31,7 +31,10 @@ export const fonts = {
 } as const;
 
 /** Per-category chip styling for quick visual recognition. */
-export const categoryMeta: Record<string, { emoji: string; tint: string; ink: string; label: string }> = {
+export const categoryMeta: Record<
+  string,
+  { emoji: string; tint: string; ink: string; label: string }
+> = {
   sleep: { emoji: "🌙", tint: "#ECEFF7", ink: "#5B6B96", label: "Sleep" },
   feeding: { emoji: "🍽️", tint: "#FAF0E7", ink: "#B0793F", label: "Feeding" },
   development: { emoji: "🌱", tint: "#E9F1EB", ink: "#557159", label: "Development" },

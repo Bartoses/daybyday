@@ -90,7 +90,14 @@ export default function Today() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.bg,
+        }}
+      >
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
@@ -110,13 +117,29 @@ export default function Today() {
           alignSelf: "center",
         }}
       >
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.title,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
             {greeting()}
             {me?.parent.name ? `, ${titleCase(me.parent.name)}` : ""}
           </Text>
           <View style={{ flexDirection: "row", gap: spacing.md }}>
-            <Text onPress={() => router.push("/settings")} style={{ color: colors.primary, fontSize: font.small }}>
+            <Text
+              onPress={() => router.push("/settings")}
+              style={{ color: colors.primary, fontSize: font.small }}
+            >
               Settings
             </Text>
             <Text
@@ -132,7 +155,11 @@ export default function Today() {
         </View>
 
         {children.length > 1 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: spacing.sm }}
+          >
             {children.map((c) => {
               const active = c.id === child?.id;
               return (
@@ -148,7 +175,13 @@ export default function Today() {
                     backgroundColor: active ? colors.primary : colors.surface,
                   }}
                 >
-                  <Text style={{ color: active ? colors.onPrimary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
+                  <Text
+                    style={{
+                      color: active ? colors.onPrimary : colors.text,
+                      fontWeight: active ? "700" : "500",
+                      fontSize: font.small,
+                    }}
+                  >
                     {titleCase(c.name)}
                   </Text>
                 </Pressable>
@@ -258,7 +291,12 @@ export default function Today() {
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
             {QUICK_ACTIONS.map((a) => (
               <View key={a.key} style={{ flexGrow: 1, minWidth: 96 }}>
-                <Button title={a.label} variant="secondary" onPress={() => quick(a.key)} disabled={actionBusy} />
+                <Button
+                  title={a.label}
+                  variant="secondary"
+                  onPress={() => quick(a.key)}
+                  disabled={actionBusy}
+                />
               </View>
             ))}
           </View>
@@ -267,4 +305,3 @@ export default function Today() {
     </Screen>
   );
 }
-

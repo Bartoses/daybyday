@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import type { MeResponse } from "@daybyday/schemas";
 import { api, ApiError, dayChat, type DayMessage } from "../src/api-client";
@@ -44,7 +37,10 @@ export default function AskDay() {
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    Promise.all([api.me(), api.dayHistory().catch(() => ({ messages: [] as DayMessage[], limit: 0 }))])
+    Promise.all([
+      api.me(),
+      api.dayHistory().catch(() => ({ messages: [] as DayMessage[], limit: 0 })),
+    ])
       .then(async ([m, hist]) => {
         setParentName(m.parent.name ?? "");
         setChildren(m.children);
@@ -107,7 +103,14 @@ export default function AskDay() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.bg,
+        }}
+      >
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
@@ -140,17 +143,35 @@ export default function AskDay() {
             ...shadow,
           }}
         >
-          <Text style={{ fontFamily: fonts.display, fontSize: 24, fontWeight: "600", color: colors.surfaceAlt }}>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: 24,
+              fontWeight: "600",
+              color: colors.surfaceAlt,
+            }}
+          >
             d
           </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.heading }}>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.heading,
+              fontWeight: "600",
+              color: colors.heading,
+            }}
+          >
             Day
           </Text>
-          <Text style={{ fontSize: font.tiny, color: colors.accent, fontWeight: "700" }}>● Always here</Text>
+          <Text style={{ fontSize: font.tiny, color: colors.accent, fontWeight: "700" }}>
+            ● Always here
+          </Text>
         </View>
-        {children.length > 1 ? <ChildSwitcher children={children} child={child} onPick={setChild} /> : null}
+        {children.length > 1 ? (
+          <ChildSwitcher children={children} child={child} onPick={setChild} />
+        ) : null}
         <Text
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))}
           style={{ color: colors.primaryPress, fontSize: font.small, fontWeight: "700" }}
@@ -174,11 +195,21 @@ export default function AskDay() {
       >
         {isEmpty ? (
           <View style={{ gap: spacing.lg, paddingTop: spacing.lg }}>
-            <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "500", color: colors.heading, lineHeight: 32 }}>
+            <Text
+              style={{
+                fontFamily: fonts.display,
+                fontSize: font.title,
+                fontWeight: "500",
+                color: colors.heading,
+                lineHeight: 32,
+              }}
+            >
               {parentName ? `Hi ${titleCase(parentName)} — ` : "Hi — "}
               ask me anything{child ? ` about ${titleCase(child.name)}` : ""}.
             </Text>
-            <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>Try asking</Text>
+            <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>
+              Try asking
+            </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
               {suggestions.map((q) => (
                 <Pressable
@@ -191,7 +222,11 @@ export default function AskDay() {
                     paddingHorizontal: spacing.lg,
                   }}
                 >
-                  <Text style={{ color: colors.primaryPress, fontSize: font.small, fontWeight: "600" }}>{q}</Text>
+                  <Text
+                    style={{ color: colors.primaryPress, fontSize: font.small, fontWeight: "600" }}
+                  >
+                    {q}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -212,7 +247,11 @@ export default function AskDay() {
 
         {limitReached ? <PaywallNudge /> : null}
         {error ? (
-          <Text style={{ color: colors.danger, fontSize: font.small, paddingHorizontal: spacing.xs }}>{error}</Text>
+          <Text
+            style={{ color: colors.danger, fontSize: font.small, paddingHorizontal: spacing.xs }}
+          >
+            {error}
+          </Text>
         ) : null}
       </ScrollView>
 
@@ -284,7 +323,15 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
   return (
     <View style={{ alignItems: isUser ? "flex-end" : "flex-start" }}>
       {!isUser ? (
-        <Text style={{ fontSize: font.tiny, fontWeight: "700", color: colors.accent, marginBottom: 2, marginLeft: spacing.xs }}>
+        <Text
+          style={{
+            fontSize: font.tiny,
+            fontWeight: "700",
+            color: colors.accent,
+            marginBottom: 2,
+            marginLeft: spacing.xs,
+          }}
+        >
           Day
         </Text>
       ) : null}
@@ -319,7 +366,15 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
 function TypingBubble() {
   return (
     <View style={{ alignItems: "flex-start" }}>
-      <Text style={{ fontSize: font.tiny, fontWeight: "700", color: colors.accent, marginBottom: 2, marginLeft: spacing.xs }}>
+      <Text
+        style={{
+          fontSize: font.tiny,
+          fontWeight: "700",
+          color: colors.accent,
+          marginBottom: 2,
+          marginLeft: spacing.xs,
+        }}
+      >
         Day
       </Text>
       <View
@@ -337,7 +392,9 @@ function TypingBubble() {
         }}
       >
         <ActivityIndicator color={colors.accent} size="small" />
-        <Text style={{ color: colors.textMuted, fontSize: font.small, fontStyle: "italic" }}>Day is thinking…</Text>
+        <Text style={{ color: colors.textMuted, fontSize: font.small, fontStyle: "italic" }}>
+          Day is thinking…
+        </Text>
       </View>
     </View>
   );
@@ -354,11 +411,19 @@ function PaywallNudge() {
         ...shadow,
       }}
     >
-      <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.surfaceAlt }}>
+      <Text
+        style={{
+          fontFamily: fonts.display,
+          fontSize: font.heading,
+          fontWeight: "600",
+          color: colors.surfaceAlt,
+        }}
+      >
         You've reached today's free messages
       </Text>
       <Text style={{ color: "#C9CEDA", fontSize: font.small, lineHeight: 21 }}>
-        Upgrade to Premium for unlimited chats with Day, plus the full meal planner and advanced reminders.
+        Upgrade to Premium for unlimited chats with Day, plus the full meal planner and advanced
+        reminders.
       </Text>
       <Pressable
         onPress={() => router.push("/settings")}
@@ -370,7 +435,9 @@ function PaywallNudge() {
           alignItems: "center",
         }}
       >
-        <Text style={{ color: colors.onPrimary, fontWeight: "700", fontSize: font.body }}>See Premium</Text>
+        <Text style={{ color: colors.onPrimary, fontWeight: "700", fontSize: font.body }}>
+          See Premium
+        </Text>
       </Pressable>
     </View>
   );

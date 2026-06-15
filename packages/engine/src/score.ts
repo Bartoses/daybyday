@@ -137,7 +137,9 @@ export function scoreCandidate(candidate: Candidate, input: ScoreInput): number 
     score += ENGINE_CONFIG.timeOfDayBoost;
   }
 
-  score -= ENGINE_CONFIG.difficultyPenalty[String(candidate.difficulty_level || "easy").toLowerCase()] ?? 0;
+  score -=
+    ENGINE_CONFIG.difficultyPenalty[String(candidate.difficulty_level || "easy").toLowerCase()] ??
+    0;
 
   return score;
 }

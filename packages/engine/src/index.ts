@@ -8,12 +8,7 @@
 
 export { ENGINE_CONFIG } from "./config.js";
 export { hashString } from "./hash.js";
-export {
-  LEAP_WINDOWS,
-  leapContextForAge,
-  type LeapWindow,
-  type LeapContext,
-} from "./leap.js";
+export { LEAP_WINDOWS, leapContextForAge, type LeapWindow, type LeapContext } from "./leap.js";
 export {
   ROTATING_CATEGORIES,
   requestedCategoryAliases,

@@ -9,13 +9,24 @@ import { colors, font, fonts, radius, spacing, categoryLabels } from "../src/the
 import { titleCase, formatAge } from "../src/format";
 import { enablePush, disablePush, getPushState, pushSupported, type PushState } from "../src/push";
 
-const NOTIF_CATEGORIES = ["sleep", "feeding", "development", "learning_play", "emotional", "behavior", "safety"];
+const NOTIF_CATEGORIES = [
+  "sleep",
+  "feeding",
+  "development",
+  "learning_play",
+  "emotional",
+  "behavior",
+  "safety",
+];
 function formatHour(h: number): string {
   const period = h < 12 ? "AM" : "PM";
   const hr = h % 12 === 0 ? 12 : h % 12;
   return `${hr}:00 ${period}`;
 }
-const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => ({ value: String(h), label: formatHour(h) }));
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, h) => ({
+  value: String(h),
+  label: formatHour(h),
+}));
 
 type Child = MeResponse["children"][number];
 
@@ -73,7 +84,11 @@ export default function Settings() {
     setPrefsBusy(true);
     setPrefsSaved(false);
     try {
-      await api.updateNotifPrefs({ daily_enabled: true, send_hour: sendHour, categories: notifCats });
+      await api.updateNotifPrefs({
+        daily_enabled: true,
+        send_hour: sendHour,
+        categories: notifCats,
+      });
       setPrefsSaved(true);
     } catch {
       /* non-blocking */
@@ -108,7 +123,9 @@ export default function Settings() {
     setPushNote(null);
     try {
       const res = await api.pushTest();
-      setPushNote(`Sent to ${res.sent} device${res.sent === 1 ? "" : "s"} — check your notifications.`);
+      setPushNote(
+        `Sent to ${res.sent} device${res.sent === 1 ? "" : "s"} — check your notifications.`,
+      );
     } catch (e) {
       setPushNote(e instanceof ApiError ? e.message : "Could not send a test.");
     } finally {
@@ -160,7 +177,14 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.bg,
+        }}
+      >
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
@@ -177,8 +201,19 @@ export default function Settings() {
           alignSelf: "center",
         }}
       >
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>Settings</Text>
+        <View
+          style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.title,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
+            Settings
+          </Text>
           <Text
             onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))}
             style={{ color: colors.primary, fontSize: font.small }}
@@ -212,10 +247,21 @@ export default function Settings() {
 
         {/* Profile */}
         <Card style={{ gap: spacing.md }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.text }}>Your profile</Text>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.heading,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
+            Your profile
+          </Text>
           <Field label="Your name" value={name} onChangeText={setName} placeholder="Alex" />
           <View style={{ gap: spacing.xs }}>
-            <Text style={{ color: colors.textMuted, fontSize: font.small, fontWeight: "600" }}>Focus</Text>
+            <Text style={{ color: colors.textMuted, fontSize: font.small, fontWeight: "600" }}>
+              Focus
+            </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm }}>
               {FOCUS_OPTIONS.map((o) => {
                 const active = focus === o.key;
@@ -232,7 +278,13 @@ export default function Settings() {
                       backgroundColor: active ? colors.surfaceAlt : colors.surface,
                     }}
                   >
-                    <Text style={{ color: active ? colors.primary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
+                    <Text
+                      style={{
+                        color: active ? colors.primary : colors.text,
+                        fontWeight: active ? "700" : "500",
+                        fontSize: font.small,
+                      }}
+                    >
                       {o.label}
                     </Text>
                   </Pressable>
@@ -240,12 +292,25 @@ export default function Settings() {
               })}
             </View>
           </View>
-          <Button title={profileSaved ? "Saved ✓" : "Save profile"} onPress={saveProfile} loading={savingProfile} />
+          <Button
+            title={profileSaved ? "Saved ✓" : "Save profile"}
+            onPress={saveProfile}
+            loading={savingProfile}
+          />
         </Card>
 
         {/* Notifications */}
         <Card style={{ gap: spacing.md }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.text }}>Daily reminders</Text>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.heading,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
+            Daily reminders
+          </Text>
           {!pushSupported() ? (
             <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
               Notifications aren't supported here. On iPhone, add DaybyDay to your Home Screen first
@@ -253,7 +318,8 @@ export default function Settings() {
             </Text>
           ) : pushState === "denied" ? (
             <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
-              Notifications are blocked in your browser settings. Re-enable them for this site, then refresh.
+              Notifications are blocked in your browser settings. Re-enable them for this site, then
+              refresh.
             </Text>
           ) : (
             <>
@@ -267,7 +333,12 @@ export default function Settings() {
                 loading={pushBusy}
               />
               {pushState === "subscribed" ? (
-                <Button title="Send a test notification" variant="secondary" onPress={sendTest} loading={pushBusy} />
+                <Button
+                  title="Send a test notification"
+                  variant="secondary"
+                  onPress={sendTest}
+                  loading={pushBusy}
+                />
               ) : null}
             </>
           )}
@@ -277,7 +348,14 @@ export default function Settings() {
 
           {/* Schedule + topic controls (only meaningful once reminders are on) */}
           {pushState === "subscribed" ? (
-            <View style={{ gap: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.lg }}>
+            <View
+              style={{
+                gap: spacing.md,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+                paddingTop: spacing.lg,
+              }}
+            >
               <Select
                 label="When should we send it?"
                 value={String(sendHour)}
@@ -294,7 +372,14 @@ export default function Settings() {
                 <Text style={{ color: colors.textMuted, fontSize: font.tiny }}>
                   Pick topics, or leave all off for a balanced mix.
                 </Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.xs }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: spacing.sm,
+                    marginTop: spacing.xs,
+                  }}
+                >
                   {NOTIF_CATEGORIES.map((c) => {
                     const active = notifCats.includes(c);
                     return (
@@ -310,7 +395,13 @@ export default function Settings() {
                           backgroundColor: active ? colors.surfaceAlt : colors.surface,
                         }}
                       >
-                        <Text style={{ color: active ? colors.primary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
+                        <Text
+                          style={{
+                            color: active ? colors.primary : colors.text,
+                            fontWeight: active ? "700" : "500",
+                            fontSize: font.small,
+                          }}
+                        >
                           {categoryLabels[c] ?? c}
                         </Text>
                       </Pressable>
@@ -330,7 +421,16 @@ export default function Settings() {
 
         {/* Children */}
         <Card style={{ gap: spacing.md }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.text }}>Children</Text>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.heading,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
+            Children
+          </Text>
           {(me?.children ?? []).map((c) => (
             <View
               key={c.id}
@@ -350,14 +450,19 @@ export default function Settings() {
                   {c.age_days != null ? `  ·  ${formatAge(c.age_days)}` : ""}
                 </Text>
               </Text>
-              <Text onPress={() => removeChild(c)} style={{ color: colors.danger, fontSize: font.small }}>
+              <Text
+                onPress={() => removeChild(c)}
+                style={{ color: colors.danger, fontSize: font.small }}
+              >
                 Remove
               </Text>
             </View>
           ))}
 
           <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
-            <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>Add a child</Text>
+            <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>
+              Add a child
+            </Text>
             <Field label="Child's name" value={cName} onChangeText={setCName} placeholder="Sam" />
             <DateSelect label="Birthdate" value={cDate} onChange={setCDate} />
             <Button title="Add child" variant="secondary" onPress={addChild} loading={adding} />
@@ -367,4 +472,3 @@ export default function Settings() {
     </Screen>
   );
 }
-

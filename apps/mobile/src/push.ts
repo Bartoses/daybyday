@@ -3,7 +3,12 @@ import { api } from "./api-client";
 
 /** Web Push helpers (web/PWA only; no-op on native for now). */
 
-export type PushState = "unsupported" | "default" | "denied" | "subscribed" | "granted-not-subscribed";
+export type PushState =
+  | "unsupported"
+  | "default"
+  | "denied"
+  | "subscribed"
+  | "granted-not-subscribed";
 
 export function pushSupported(): boolean {
   return (

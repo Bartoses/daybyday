@@ -42,7 +42,6 @@ export function GrowthPrompt() {
 
   useEffect(() => {
     compute();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function dismissInstall() {
@@ -111,16 +110,32 @@ export function GrowthPrompt() {
       <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "flex-start" }}>
         <Text style={{ fontSize: font.title }}>{content.emoji}</Text>
         <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.body, fontWeight: "600", color: colors.text }}>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.body,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
             {content.title}
           </Text>
-          <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>{content.body}</Text>
+          <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
+            {content.body}
+          </Text>
         </View>
       </View>
 
       {note ? <Text style={{ fontSize: font.tiny, color: colors.danger }}>{note}</Text> : null}
 
-      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.lg, marginTop: spacing.xs }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: spacing.lg,
+          marginTop: spacing.xs,
+        }}
+      >
         {content.action ? (
           <Pressable
             onPress={content.action.onPress}
@@ -137,7 +152,10 @@ export function GrowthPrompt() {
             </Text>
           </Pressable>
         ) : null}
-        <Text onPress={content.dismiss.onPress} style={{ color: colors.textMuted, fontSize: font.small }}>
+        <Text
+          onPress={content.dismiss.onPress}
+          style={{ color: colors.textMuted, fontSize: font.small }}
+        >
           {content.dismiss.label}
         </Text>
       </View>

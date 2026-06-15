@@ -25,22 +25,18 @@ export function buildApp(config: AppConfig = loadConfig()): FastifyInstance {
 
   // Allow body-less POSTs (e.g. /onboarding/complete) even when the client sends
   // content-type: application/json — treat an empty body as undefined, not a 400.
-  app.addContentTypeParser(
-    "application/json",
-    { parseAs: "string" },
-    (_req, body, done) => {
-      if (body === "" || body == null) {
-        done(null, undefined);
-        return;
-      }
-      try {
-        done(null, JSON.parse(body as string));
-      } catch (err) {
-        (err as Error & { statusCode?: number }).statusCode = 400;
-        done(err as Error, undefined);
-      }
-    },
-  );
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, body, done) => {
+    if (body === "" || body == null) {
+      done(null, undefined);
+      return;
+    }
+    try {
+      done(null, JSON.parse(body as string));
+    } catch (err) {
+      (err as Error & { statusCode?: number }).statusCode = 400;
+      done(err as Error, undefined);
+    }
+  });
 
   app.decorate("config", config);
   app.decorate("db", makeServiceClient(config));

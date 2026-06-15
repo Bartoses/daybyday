@@ -37,43 +37,56 @@ export async function childrenRoutes(app: FastifyInstance): Promise<void> {
       .single();
 
     if (error || !data) {
-      return reply.code(500).send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
+      return reply
+        .code(500)
+        .send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
     }
     return reply.code(201).send(enrich(data as ChildRow, new Date()));
   });
 
   // PATCH /v1/children/:id
-  app.patch("/v1/children/:id", { preHandler }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const { id } = req.params as { id: string };
-    const body = (req.body ?? {}) as Record<string, unknown>;
-    const updates: Record<string, unknown> = {};
-    for (const k of ["name", "birthdate", "due_date", "gender", "photo_url", "status"]) {
-      if (body[k] !== undefined) updates[k] = body[k];
-    }
-    const { data, error } = await app.db
-      .from("children")
-      .update(updates)
-      .eq("id", id)
-      .eq("parent_id", req.parent!.id) // scope to owner
-      .select(CHILD_COLUMNS)
-      .maybeSingle();
+  app.patch(
+    "/v1/children/:id",
+    { preHandler },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const updates: Record<string, unknown> = {};
+      for (const k of ["name", "birthdate", "due_date", "gender", "photo_url", "status"]) {
+        if (body[k] !== undefined) updates[k] = body[k];
+      }
+      const { data, error } = await app.db
+        .from("children")
+        .update(updates)
+        .eq("id", id)
+        .eq("parent_id", req.parent!.id) // scope to owner
+        .select(CHILD_COLUMNS)
+        .maybeSingle();
 
-    if (error) return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
-    if (!data) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
-    return reply.send(enrich(data as ChildRow, new Date()));
-  });
+      if (error)
+        return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
+      if (!data)
+        return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+      return reply.send(enrich(data as ChildRow, new Date()));
+    },
+  );
 
   // DELETE /v1/children/:id
-  app.delete("/v1/children/:id", { preHandler }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const { id } = req.params as { id: string };
-    const { error } = await app.db
-      .from("children")
-      .delete()
-      .eq("id", id)
-      .eq("parent_id", req.parent!.id);
-    if (error) return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
-    return reply.code(204).send();
-  });
+  app.delete(
+    "/v1/children/:id",
+    { preHandler },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const { id } = req.params as { id: string };
+      const { error } = await app.db
+        .from("children")
+        .delete()
+        .eq("id", id)
+        .eq("parent_id", req.parent!.id);
+      if (error)
+        return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
+      return reply.code(204).send();
+    },
+  );
 
   // POST /v1/onboarding/complete — mark ONBOARDED.
   app.post(
@@ -84,7 +97,8 @@ export async function childrenRoutes(app: FastifyInstance): Promise<void> {
         .from("parents")
         .update({ onboarding_step: "ONBOARDED" })
         .eq("id", req.parent!.id);
-      if (error) return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
+      if (error)
+        return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
       return reply.send({ onboarding_step: "ONBOARDED" });
     },
   );

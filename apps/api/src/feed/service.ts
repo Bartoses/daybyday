@@ -222,7 +222,11 @@ export async function loadCardByTip(
   tipId: string,
   now: Date,
 ): Promise<FeedCardResult | null> {
-  const { data } = await db.from("content_items").select(CONTENT_COLUMNS).eq("tip_id", tipId).maybeSingle();
+  const { data } = await db
+    .from("content_items")
+    .select(CONTENT_COLUMNS)
+    .eq("tip_id", tipId)
+    .maybeSingle();
   if (!data) return null;
   return toCard(child, data as ContentRow, childAgeDays(child, now), now);
 }

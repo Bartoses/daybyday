@@ -54,15 +54,11 @@ export function buildSystemPrompt(
 
   const kids =
     children.length > 0
-      ? children
-          .map((c) => `- ${titleCase(c.name)}, ${describeAge(c, now)}`)
-          .join("\n")
+      ? children.map((c) => `- ${titleCase(c.name)}, ${describeAge(c, now)}`).join("\n")
       : "- (no children added yet)";
 
   const focus =
-    focusAreas.length > 0
-      ? `They told us they care most about: ${focusAreas.join(", ")}.`
-      : "";
+    focusAreas.length > 0 ? `They told us they care most about: ${focusAreas.join(", ")}.` : "";
 
   return [
     `You are Day, the warm, practical parenting companion inside the DaybyDay app.`,

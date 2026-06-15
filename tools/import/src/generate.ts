@@ -25,7 +25,15 @@ loadEnv({ path: resolve(here, "../../../.env") });
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const CATEGORIES = ["sleep", "feeding", "development", "learning_play", "emotional", "behavior", "safety"] as const;
+const CATEGORIES = [
+  "sleep",
+  "feeding",
+  "development",
+  "learning_play",
+  "emotional",
+  "behavior",
+  "safety",
+] as const;
 type Category = (typeof CATEGORIES)[number];
 
 /** Stage label → age-day band + slug, matching the daily-pool stage taxonomy. */
@@ -93,13 +101,26 @@ interface Args {
 }
 
 function parseArgs(argv: string[]): Args {
-  const a: Args = { target: 12, maxCells: Infinity, stages: null, categories: null, dryRun: false, out: null };
+  const a: Args = {
+    target: 12,
+    maxCells: Infinity,
+    stages: null,
+    categories: null,
+    dryRun: false,
+    out: null,
+  };
   for (let i = 0; i < argv.length; i++) {
     const v = argv[i];
     if (v === "--target") a.target = Number(argv[++i]);
     else if (v === "--max-cells") a.maxCells = Number(argv[++i]);
-    else if (v === "--stages") a.stages = String(argv[++i]).split(",").map((s) => s.trim());
-    else if (v === "--categories") a.categories = String(argv[++i]).split(",").map((s) => s.trim()) as Category[];
+    else if (v === "--stages")
+      a.stages = String(argv[++i])
+        .split(",")
+        .map((s) => s.trim());
+    else if (v === "--categories")
+      a.categories = String(argv[++i])
+        .split(",")
+        .map((s) => s.trim()) as Category[];
     else if (v === "--dry-run") a.dryRun = true;
     else if (v === "--out") a.out = argv[++i] ?? null;
   }
@@ -144,7 +165,16 @@ async function buildCells(db: SupabaseClient, args: Args): Promise<Cell[]> {
       const e = byCell.get(`${sr.label}|${category}`) ?? { count: 0, insights: [] };
       const need = args.target - e.count;
       if (need <= 0) continue;
-      cells.push({ stage: sr.label, category, min: sr.min, max: sr.max, slug: sr.slug, count: e.count, insights: e.insights, need });
+      cells.push({
+        stage: sr.label,
+        category,
+        min: sr.min,
+        max: sr.max,
+        slug: sr.slug,
+        count: e.count,
+        insights: e.insights,
+        need,
+      });
     }
   }
   return cells.sort((a, b) => b.need - a.need);
@@ -160,8 +190,16 @@ Avoid duplicating the existing tips provided.
 Return ONLY a JSON array, no prose, where each element is:
 {"insight": "1-2 sentence why/what (the idea)", "action": "one concrete thing to try today", "reassurance": "one warm sentence", "development_focus": "a short 1-4 word label e.g. 'fine motor'", "follow_up_prompt": "a real question a parent at this stage might ask", "when_to_consult_doctor": "one sentence, or null if not applicable"}`;
 
-async function generateForCell(client: Anthropic, model: string, cell: Cell): Promise<GeneratedTip[]> {
-  const existing = cell.insights.slice(0, 20).map((s) => `- ${s}`).join("\n") || "(none yet)";
+async function generateForCell(
+  client: Anthropic,
+  model: string,
+  cell: Cell,
+): Promise<GeneratedTip[]> {
+  const existing =
+    cell.insights
+      .slice(0, 20)
+      .map((s) => `- ${s}`)
+      .join("\n") || "(none yet)";
   const user = `Stage: ${cell.stage}. Topic/category: ${cell.category}. Write ${cell.need} NEW daily tips.
 Existing tips for this stage+topic (do not repeat these ideas):
 ${existing}`;
@@ -173,10 +211,14 @@ ${existing}`;
     messages: [{ role: "user", content: user }],
   });
 
-  const text = res.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
+  const text = res.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { text: string }).text)
+    .join("");
   const start = text.indexOf("[");
   const end = text.lastIndexOf("]");
-  if (start === -1 || end === -1) throw new Error(`No JSON array in response for ${cell.stage}/${cell.category}`);
+  if (start === -1 || end === -1)
+    throw new Error(`No JSON array in response for ${cell.stage}/${cell.category}`);
   const parsed = JSON.parse(text.slice(start, end + 1)) as GeneratedTip[];
   return parsed.filter((t) => t && t.insight && t.action && t.reassurance);
 }
@@ -211,7 +253,8 @@ async function main(): Promise<void> {
   const supabaseUrl = process.env["SUPABASE_URL"];
   const serviceRoleKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
   const anthropicKey = process.env["ANTHROPIC_API_KEY"];
-  if (!supabaseUrl || !serviceRoleKey) throw new Error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey)
+    throw new Error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY");
   if (!anthropicKey) throw new Error("Missing ANTHROPIC_API_KEY");
 
   const model = process.env["CONTENT_MODEL"] ?? "claude-sonnet-4-6";
@@ -222,8 +265,11 @@ async function main(): Promise<void> {
   const cells = allCells.slice(0, Number.isFinite(args.maxCells) ? args.maxCells : allCells.length);
   const totalNeed = cells.reduce((s, c) => s + c.need, 0);
 
-  console.log(`Target ${args.target}/cell. Cells below target: ${allCells.length} (processing ${cells.length}). Tips to generate: ${totalNeed}`);
-  for (const c of cells.slice(0, 30)) console.log(`  ${c.stage} / ${c.category}: have ${c.count}, need ${c.need}`);
+  console.log(
+    `Target ${args.target}/cell. Cells below target: ${allCells.length} (processing ${cells.length}). Tips to generate: ${totalNeed}`,
+  );
+  for (const c of cells.slice(0, 30))
+    console.log(`  ${c.stage} / ${c.category}: have ${c.count}, need ${c.need}`);
   if (args.dryRun) {
     console.log("\n--dry-run: no API calls, no writes.");
     return;
@@ -256,11 +302,15 @@ async function main(): Promise<void> {
   let upserted = 0;
   for (let i = 0; i < deduped.length; i += 200) {
     const batch = deduped.slice(i, i + 200);
-    const { error, count } = await db.from("content_items").upsert(batch, { onConflict: "tip_id", count: "exact" });
+    const { error, count } = await db
+      .from("content_items")
+      .upsert(batch, { onConflict: "tip_id", count: "exact" });
     if (error) console.error(`  upsert error: ${error.message}`);
     else upserted += count ?? batch.length;
   }
-  console.log(`\nUpserted ${upserted} AI-generated tips (reviewer='ai-generated', tip_id prefix 'ai_').`);
+  console.log(
+    `\nUpserted ${upserted} AI-generated tips (reviewer='ai-generated', tip_id prefix 'ai_').`,
+  );
 }
 
 main().catch((err) => {

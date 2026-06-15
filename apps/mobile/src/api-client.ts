@@ -81,8 +81,7 @@ export const api = {
       body: JSON.stringify(input),
     }),
 
-  deleteChild: (id: string) =>
-    request<void>(`/v1/children/${id}`, { method: "DELETE" }),
+  deleteChild: (id: string) => request<void>(`/v1/children/${id}`, { method: "DELETE" }),
 
   completeOnboarding: () =>
     request<{ onboarding_step: string }>("/v1/onboarding/complete", { method: "POST" }),
@@ -105,8 +104,7 @@ export const api = {
   faq: (childId: string) =>
     request<{ questions: string[] }>(`/v1/faq?child_id=${encodeURIComponent(childId)}`),
 
-  dayHistory: () =>
-    request<{ messages: DayMessage[]; limit: number }>("/v1/day/messages"),
+  dayHistory: () => request<{ messages: DayMessage[]; limit: number }>("/v1/day/messages"),
 
   milestones: (childId: string) =>
     request<{ child_id: string; age_months: number; milestones: MilestoneItem[] }>(
@@ -120,9 +118,12 @@ export const api = {
     }),
 
   unachieveMilestone: (key: string, childId: string) =>
-    request<void>(`/v1/milestones/${encodeURIComponent(key)}?child_id=${encodeURIComponent(childId)}`, {
-      method: "DELETE",
-    }),
+    request<void>(
+      `/v1/milestones/${encodeURIComponent(key)}?child_id=${encodeURIComponent(childId)}`,
+      {
+        method: "DELETE",
+      },
+    ),
 
   ask: (childId: string, question: string) =>
     request<{ question_id: string; matched: boolean; answer: FeedCard | null }>("/v1/questions", {
@@ -144,13 +145,22 @@ export const api = {
   pushTest: () => request<{ sent: number }>("/v1/push/test", { method: "POST" }),
 
   getNotifPrefs: () =>
-    request<{ daily_enabled: boolean; send_hour: number; categories: string[] }>("/v1/notification-prefs"),
+    request<{ daily_enabled: boolean; send_hour: number; categories: string[] }>(
+      "/v1/notification-prefs",
+    ),
 
-  updateNotifPrefs: (input: { daily_enabled?: boolean; send_hour?: number; categories?: string[] }) =>
-    request<{ daily_enabled: boolean; send_hour: number; categories: string[] }>("/v1/notification-prefs", {
-      method: "PUT",
-      body: JSON.stringify(input),
-    }),
+  updateNotifPrefs: (input: {
+    daily_enabled?: boolean;
+    send_hour?: number;
+    categories?: string[];
+  }) =>
+    request<{ daily_enabled: boolean; send_hour: number; categories: string[] }>(
+      "/v1/notification-prefs",
+      {
+        method: "PUT",
+        body: JSON.stringify(input),
+      },
+    ),
 
   // Admin
   adminBroadcasts: () => request<{ broadcasts: Broadcast[] }>("/v1/admin/broadcasts"),
@@ -164,7 +174,9 @@ export const api = {
   }) => request<Broadcast>("/v1/admin/broadcasts", { method: "POST", body: JSON.stringify(input) }),
 
   sendBroadcastNow: (id: string) =>
-    request<{ sent: number }>(`/v1/admin/broadcasts/${encodeURIComponent(id)}/send`, { method: "POST" }),
+    request<{ sent: number }>(`/v1/admin/broadcasts/${encodeURIComponent(id)}/send`, {
+      method: "POST",
+    }),
 
   cancelBroadcast: (id: string) =>
     request<void>(`/v1/admin/broadcasts/${encodeURIComponent(id)}`, { method: "DELETE" }),

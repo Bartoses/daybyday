@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import { api, ApiError, type Broadcast } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
@@ -112,7 +112,14 @@ export default function Admin() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.bg,
+        }}
+      >
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
@@ -120,20 +127,61 @@ export default function Admin() {
 
   return (
     <Screen style={{ padding: 0 }}>
-      <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.xl, maxWidth: 600, width: "100%", alignSelf: "center" }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>Admin · Broadcasts</Text>
-          <Text onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))} style={{ color: colors.primary, fontSize: font.small }}>
+      <ScrollView
+        contentContainerStyle={{
+          padding: spacing.xl,
+          gap: spacing.xl,
+          maxWidth: 600,
+          width: "100%",
+          alignSelf: "center",
+        }}
+      >
+        <View
+          style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+        >
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.title,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
+            Admin · Broadcasts
+          </Text>
+          <Text
+            onPress={() => (router.canGoBack() ? router.back() : router.replace("/today"))}
+            style={{ color: colors.primary, fontSize: font.small }}
+          >
             Done
           </Text>
         </View>
 
         {/* Composer */}
         <Card style={{ gap: spacing.md }}>
-          <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>Schedule a message</Text>
-          <Field label="Title" value={title} onChangeText={setTitle} placeholder="A note from DaybyDay" />
-          <Field label="Message" value={body} onChangeText={setBody} placeholder="What do you want to say?" multiline />
-          <Field label="Link (optional)" value={url} onChangeText={setUrl} placeholder="https://… (leave blank to open the app)" autoCapitalize="none" />
+          <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>
+            Schedule a message
+          </Text>
+          <Field
+            label="Title"
+            value={title}
+            onChangeText={setTitle}
+            placeholder="A note from DaybyDay"
+          />
+          <Field
+            label="Message"
+            value={body}
+            onChangeText={setBody}
+            placeholder="What do you want to say?"
+            multiline
+          />
+          <Field
+            label="Link (optional)"
+            value={url}
+            onChangeText={setUrl}
+            placeholder="https://… (leave blank to open the app)"
+            autoCapitalize="none"
+          />
           <View style={{ flexDirection: "row", gap: spacing.sm }}>
             <View style={{ flex: 1.4 }}>
               <Select label="Day" value={day} options={days} onChange={setDay} />
@@ -142,37 +190,63 @@ export default function Admin() {
               <Select label="Time" value={hour} options={HOURS} onChange={setHour} />
             </View>
           </View>
-          {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
+          {error ? (
+            <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text>
+          ) : null}
           <Button title="Send now" onPress={() => submit(true)} loading={busy} />
-          <Button title="Schedule for the time above" variant="secondary" onPress={() => submit(false)} loading={busy} />
+          <Button
+            title="Schedule for the time above"
+            variant="secondary"
+            onPress={() => submit(false)}
+            loading={busy}
+          />
           <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>
-            Goes to everyone with notifications on. "Send now" is instant; scheduled sends fire within ~15 minutes of the chosen time (your timezone).
+            Goes to everyone with notifications on. "Send now" is instant; scheduled sends fire
+            within ~15 minutes of the chosen time (your timezone).
           </Text>
         </Card>
 
         {/* List */}
         <View style={{ gap: spacing.sm }}>
-          <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>Scheduled & recent</Text>
+          <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.textMuted }}>
+            Scheduled & recent
+          </Text>
           {broadcasts.length === 0 ? (
             <Text style={{ fontSize: font.small, color: colors.textMuted }}>Nothing yet.</Text>
           ) : (
             broadcasts.map((b) => (
               <Card key={b.id} style={{ gap: spacing.xs }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                  <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>{b.title}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>
+                    {b.title}
+                  </Text>
                   <StatusPill status={b.status} />
                 </View>
                 <Text style={{ fontSize: font.small, color: colors.textMuted }}>{b.body}</Text>
                 <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>
                   {new Date(b.scheduled_for).toLocaleString()}
-                  {b.status === "sent" && b.sent_count != null ? `  ·  sent to ${b.sent_count}` : ""}
+                  {b.status === "sent" && b.sent_count != null
+                    ? `  ·  sent to ${b.sent_count}`
+                    : ""}
                 </Text>
                 {b.status === "scheduled" ? (
                   <View style={{ flexDirection: "row", gap: spacing.lg, marginTop: 2 }}>
-                    <Text onPress={() => sendNow(b.id)} style={{ color: colors.primary, fontSize: font.small, fontWeight: "600" }}>
+                    <Text
+                      onPress={() => sendNow(b.id)}
+                      style={{ color: colors.primary, fontSize: font.small, fontWeight: "600" }}
+                    >
                       Send now
                     </Text>
-                    <Text onPress={() => cancel(b.id)} style={{ color: colors.danger, fontSize: font.small }}>
+                    <Text
+                      onPress={() => cancel(b.id)}
+                      style={{ color: colors.danger, fontSize: font.small }}
+                    >
                       Cancel
                     </Text>
                   </View>
@@ -187,9 +261,18 @@ export default function Admin() {
 }
 
 function StatusPill({ status }: { status: Broadcast["status"] }) {
-  const color = status === "sent" ? colors.success : status === "canceled" ? colors.textMuted : colors.accent;
+  const color =
+    status === "sent" ? colors.success : status === "canceled" ? colors.textMuted : colors.accent;
   return (
-    <View style={{ borderRadius: radius.pill, borderWidth: 1, borderColor: color, paddingVertical: 2, paddingHorizontal: spacing.md }}>
+    <View
+      style={{
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: color,
+        paddingVertical: 2,
+        paddingHorizontal: spacing.md,
+      }}
+    >
       <Text style={{ fontSize: font.tiny, color, fontWeight: "700" }}>{status}</Text>
     </View>
   );

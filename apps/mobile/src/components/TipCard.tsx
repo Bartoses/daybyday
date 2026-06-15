@@ -9,12 +9,17 @@ const FALLBACK_META = { emoji: "✨", tint: colors.surfaceAlt, ink: colors.textM
 /** Whether the card has extra depth worth an expandable section. */
 function hasMore(card: FeedCard): boolean {
   return Boolean(
-    card.signs_of_healthy_development || card.common_misunderstanding || card.when_to_consult_doctor,
+    card.signs_of_healthy_development ||
+    card.common_misunderstanding ||
+    card.when_to_consult_doctor,
   );
 }
 
 function normalize(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 /**
@@ -119,7 +124,9 @@ export function TipCard({
           }}
         >
           <Text style={{ fontSize: font.small }}>{meta.emoji}</Text>
-          <Text style={{ fontSize: font.tiny, fontWeight: "700", color: meta.ink, letterSpacing: 0.3 }}>
+          <Text
+            style={{ fontSize: font.tiny, fontWeight: "700", color: meta.ink, letterSpacing: 0.3 }}
+          >
             {meta.label.toUpperCase()}
           </Text>
         </View>
@@ -142,7 +149,14 @@ export function TipCard({
       </Text>
 
       {/* Action — the "do this" block, clearly set apart */}
-      <View style={{ backgroundColor: colors.primarySoft, borderRadius: radius.card, padding: spacing.lg, gap: spacing.xs }}>
+      <View
+        style={{
+          backgroundColor: colors.primarySoft,
+          borderRadius: radius.card,
+          padding: spacing.lg,
+          gap: spacing.xs,
+        }}
+      >
         <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
           <Text style={{ fontSize: font.tiny }}>✓</Text>
           <Text
@@ -157,12 +171,22 @@ export function TipCard({
             Try this today
           </Text>
         </View>
-        <Text style={{ fontSize: font.heading, color: colors.text, lineHeight: 27 }}>{card.action_tip}</Text>
+        <Text style={{ fontSize: font.heading, color: colors.text, lineHeight: 27 }}>
+          {card.action_tip}
+        </Text>
       </View>
 
       <View style={{ flexDirection: "row", gap: spacing.sm }}>
         <Text style={{ fontSize: font.heading, lineHeight: 24 }}>💬</Text>
-        <Text style={{ flex: 1, fontSize: font.body, color: colors.textMuted, fontStyle: "italic", lineHeight: 24 }}>
+        <Text
+          style={{
+            flex: 1,
+            fontSize: font.body,
+            color: colors.textMuted,
+            fontStyle: "italic",
+            lineHeight: 24,
+          }}
+        >
           {card.reassurance}
         </Text>
       </View>
@@ -196,13 +220,19 @@ export function TipCard({
           {expanded ? (
             <View style={{ gap: spacing.md }}>
               {card.signs_of_healthy_development ? (
-                <LearnMoreRow label="Signs it's going well" body={card.signs_of_healthy_development} />
+                <LearnMoreRow
+                  label="Signs it's going well"
+                  body={card.signs_of_healthy_development}
+                />
               ) : null}
               {card.common_misunderstanding ? (
                 <LearnMoreRow label="A common myth" body={card.common_misunderstanding} />
               ) : null}
               {card.when_to_consult_doctor ? (
-                <LearnMoreRow label="When to check with your doctor" body={card.when_to_consult_doctor} />
+                <LearnMoreRow
+                  label="When to check with your doctor"
+                  body={card.when_to_consult_doctor}
+                />
               ) : null}
             </View>
           ) : null}
@@ -210,7 +240,9 @@ export function TipCard({
       ) : null}
 
       {showFocus(card) ? (
-        <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>✦ Supports {card.development_focus}</Text>
+        <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>
+          ✦ Supports {card.development_focus}
+        </Text>
       ) : null}
 
       {onFeedback ? (
@@ -224,8 +256,18 @@ export function TipCard({
             paddingTop: spacing.md,
           }}
         >
-          <FeedbackChip label="♥  Helpful" active={feedback === true} activeColor={colors.success} onPress={() => give(true)} />
-          <FeedbackChip label="Not for us" active={feedback === false} activeColor={colors.danger} onPress={() => give(false)} />
+          <FeedbackChip
+            label="♥  Helpful"
+            active={feedback === true}
+            activeColor={colors.success}
+            onPress={() => give(true)}
+          />
+          <FeedbackChip
+            label="Not for us"
+            active={feedback === false}
+            activeColor={colors.danger}
+            onPress={() => give(false)}
+          />
         </View>
       ) : null}
     </Card>

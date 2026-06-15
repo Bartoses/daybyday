@@ -42,7 +42,9 @@ export async function accountRoutes(app: FastifyInstance): Promise<void> {
         .single();
 
       if (error || !data) {
-        return reply.code(500).send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
+        return reply
+          .code(500)
+          .send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
       }
 
       // Consent provenance (TCPA audit). One row per channel the user acted on.
@@ -72,7 +74,9 @@ export async function accountRoutes(app: FastifyInstance): Promise<void> {
     const [{ data: children }, { data: subscription }] = await Promise.all([
       app.db
         .from("children")
-        .select("id, parent_id, name, birthdate, due_date, gender, photo_url, status, created_at, updated_at")
+        .select(
+          "id, parent_id, name, birthdate, due_date, gender, photo_url, status, created_at, updated_at",
+        )
         .eq("parent_id", parent.id),
       app.db
         .from("subscriptions")
@@ -105,10 +109,13 @@ export async function accountRoutes(app: FastifyInstance): Promise<void> {
     if (typeof body.name === "string") updates.name = body.name.trim();
     if (typeof body.focus_area === "string") updates.focus_area = body.focus_area;
     if (typeof body.timezone === "string") updates.timezone = body.timezone;
-    if (typeof body.preferred_send_hour === "number") updates.preferred_send_hour = body.preferred_send_hour;
+    if (typeof body.preferred_send_hour === "number")
+      updates.preferred_send_hour = body.preferred_send_hour;
 
     if (Object.keys(updates).length === 0) {
-      return reply.code(400).send({ error: { code: "VALIDATION", message: "No updatable fields" } });
+      return reply
+        .code(400)
+        .send({ error: { code: "VALIDATION", message: "No updatable fields" } });
     }
 
     const { data, error } = await app.db
@@ -121,7 +128,9 @@ export async function accountRoutes(app: FastifyInstance): Promise<void> {
       .single();
 
     if (error || !data) {
-      return reply.code(500).send({ error: { code: "INTERNAL", message: error?.message ?? "update failed" } });
+      return reply
+        .code(500)
+        .send({ error: { code: "INTERNAL", message: error?.message ?? "update failed" } });
     }
     return reply.send(data);
   });

@@ -84,8 +84,7 @@ export function chooseTopicForChild(
   availableTopics: Category[],
   recentCategories: Category[],
 ): Category {
-  let topics =
-    availableTopics.length > 0 ? [...availableTopics] : [...ROTATING_CATEGORIES];
+  const topics = availableTopics.length > 0 ? [...availableTopics] : [...ROTATING_CATEGORIES];
 
   // Move recently-used categories to the back (legacy splice+push).
   for (const recent of recentCategories) {

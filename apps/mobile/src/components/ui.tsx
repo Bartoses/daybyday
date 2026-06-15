@@ -131,10 +131,7 @@ export function Pill({ label }: { label: string }) {
 
 export function Screen({ children, style, ...rest }: ViewProps) {
   return (
-    <View
-      {...rest}
-      style={[{ flex: 1, backgroundColor: colors.bg, padding: spacing.xl }, style]}
-    >
+    <View {...rest} style={[{ flex: 1, backgroundColor: colors.bg, padding: spacing.xl }, style]}>
       {children}
     </View>
   );

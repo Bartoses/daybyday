@@ -27,9 +27,11 @@ export async function questionRoutes(app: FastifyInstance): Promise<void> {
   // GET /v1/faq?child_id — curated common questions for the child's age.
   app.get("/v1/faq", { preHandler }, async (req: FastifyRequest, reply: FastifyReply) => {
     const childId = (req.query as { child_id?: string }).child_id;
-    if (!childId) return reply.code(400).send({ error: { code: "VALIDATION", message: "child_id required" } });
+    if (!childId)
+      return reply.code(400).send({ error: { code: "VALIDATION", message: "child_id required" } });
     const child = await loadOwnedChild(app, req.parent!.id, childId);
-    if (!child) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+    if (!child)
+      return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
 
     const questions = await faqForAge(app.db, childAgeDays(child, new Date()));
     return reply.send({ questions });
@@ -40,11 +42,14 @@ export async function questionRoutes(app: FastifyInstance): Promise<void> {
     const body = (req.body ?? {}) as { child_id?: string; question?: string };
     const question = (body.question ?? "").trim();
     if (!body.child_id || question.length === 0) {
-      return reply.code(400).send({ error: { code: "VALIDATION", message: "child_id and question required" } });
+      return reply
+        .code(400)
+        .send({ error: { code: "VALIDATION", message: "child_id and question required" } });
     }
     const parentId = req.parent!.id;
     const child = await loadOwnedChild(app, parentId, body.child_id);
-    if (!child) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+    if (!child)
+      return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
 
     const now = new Date();
     const tipId = await matchTipForQuestion(app.db, childAgeDays(child, now), question);
@@ -62,7 +67,9 @@ export async function questionRoutes(app: FastifyInstance): Promise<void> {
       .single();
 
     if (error || !data) {
-      return reply.code(500).send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
+      return reply
+        .code(500)
+        .send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
     }
 
     return reply.send({ question_id: data.id, matched: answer !== null, answer });

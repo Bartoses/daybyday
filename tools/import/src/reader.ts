@@ -56,9 +56,7 @@ export async function readCsvFile(filePath: string): Promise<ReadResult> {
       );
 
       // Mask "__unused__*" columns so candidate lookup skips them.
-      const maskedHeaders = headers.map((h) =>
-        h.startsWith("__unused__") ? `__masked__${h}` : h,
-      );
+      const maskedHeaders = headers.map((h) => (h.startsWith("__unused__") ? `__masked__${h}` : h));
 
       const dataRows = records.slice(1);
       const items: ContentItemInsert[] = [];

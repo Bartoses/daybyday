@@ -29,10 +29,7 @@ const BATCH_SIZE = 200;
 export async function upsertContentItems(
   client: SupabaseClient,
   items: ContentItemInsert[],
-  {
-    csvRows,
-    skippedRows,
-  }: { csvRows: number; skippedRows: number },
+  { csvRows, skippedRows }: { csvRows: number; skippedRows: number },
 ): Promise<UpsertResult> {
   // Dedupe: iterate in order, last occurrence of a tip_id wins.
   const deduped = new Map<string, ContentItemInsert>();
@@ -72,9 +69,7 @@ export function printParityReport(result: UpsertResult): void {
   console.log(`  CSV data rows:     ${result.csvRows}`);
   console.log(`  Skipped (invalid): ${result.skippedRows}`);
   console.log(`  Unique tip_ids:    ${result.uniqueTipIds}`);
-  console.log(
-    `  Duplicates merged: ${result.csvRows - result.skippedRows - result.uniqueTipIds}`,
-  );
+  console.log(`  Duplicates merged: ${result.csvRows - result.skippedRows - result.uniqueTipIds}`);
   console.log(`  Upserted:          ${result.upserted}`);
   if (result.errors > 0) {
     console.log(`  Errors:            ${result.errors}`);

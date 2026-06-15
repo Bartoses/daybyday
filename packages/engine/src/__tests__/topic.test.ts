@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  requestedCategoryAliases,
-  resolveFamilyCategory,
-  chooseTopicForChild,
-} from "../topic.js";
+import { requestedCategoryAliases, resolveFamilyCategory, chooseTopicForChild } from "../topic.js";
 import { hashString } from "../hash.js";
 
 describe("requestedCategoryAliases", () => {

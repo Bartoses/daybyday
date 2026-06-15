@@ -152,8 +152,14 @@ describe("scoreCandidate", () => {
 
   it("morning boosts feeding; evening boosts sleep", () => {
     const feeding = makeCandidate({ category: "feeding", stage: "newborn" });
-    const morningFeeding = scoreCandidate(feeding, makeInput({ temporal: { hour: 8 }, preferredCategory: "feeding" }))!;
-    const eveningFeeding = scoreCandidate(feeding, makeInput({ temporal: { hour: 20 }, preferredCategory: "feeding" }))!;
+    const morningFeeding = scoreCandidate(
+      feeding,
+      makeInput({ temporal: { hour: 8 }, preferredCategory: "feeding" }),
+    )!;
+    const eveningFeeding = scoreCandidate(
+      feeding,
+      makeInput({ temporal: { hour: 20 }, preferredCategory: "feeding" }),
+    )!;
     expect(morningFeeding).toBeGreaterThan(eveningFeeding); // feeding fits morning, not evening
   });
 
@@ -168,7 +174,12 @@ describe("scoreCandidate", () => {
   it("applies decaying category + rotation-group penalties from history", () => {
     const c = makeCandidate({ category: "sleep", rotation_group: "sleep_group" });
     const history: HistoryEntry[] = [
-      { tip_id: "other1", sent_at: "2026-05-01T00:00:00Z", topic: "sleep", rotation_group: "sleep_group" },
+      {
+        tip_id: "other1",
+        sent_at: "2026-05-01T00:00:00Z",
+        topic: "sleep",
+        rotation_group: "sleep_group",
+      },
     ];
     const withHist = scoreCandidate(c, makeInput({ history }))!;
     const noHist = scoreCandidate(c, makeInput({ history: [] }))!;
@@ -190,7 +201,12 @@ describe("selectContentItem", () => {
   it("prefers exact-age + preferred-category pool over broader pools", () => {
     const candidates: Candidate[] = [
       // exact age, preferred category sleep
-      makeCandidate({ tip_id: "exact_sleep", category: "sleep", age_min_days: 0, age_max_days: 56 }),
+      makeCandidate({
+        tip_id: "exact_sleep",
+        category: "sleep",
+        age_min_days: 0,
+        age_max_days: 56,
+      }),
       // exact age, different category, higher raw score
       makeCandidate({
         tip_id: "exact_feeding",

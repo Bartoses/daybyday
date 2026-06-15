@@ -238,11 +238,7 @@ describe("normalizeRow", () => {
 
   it("splits keywords string into array", () => {
     const { headers, row } = makeRow({ keywords: "sleep, routine, newborn" });
-    expect(normalizeRow(headers, row, 1)?.keywords).toEqual([
-      "sleep",
-      "routine",
-      "newborn",
-    ]);
+    expect(normalizeRow(headers, row, 1)?.keywords).toEqual(["sleep", "routine", "newborn"]);
   });
 
   it("maps difficulty_level=medium correctly", () => {
@@ -274,7 +270,7 @@ describe("normalizeRow", () => {
       insight_explanation: "i",
       action_tip: "a",
       parent_reassurance: "r",
-      "__masked____unused__old_col": "should be ignored",
+      __masked____unused__old_col: "should be ignored",
     };
     const result = normalizeRow(Object.keys(data), Object.values(data), 1);
     expect(result?.tip_id).toBe("tip_masked");

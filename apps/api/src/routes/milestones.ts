@@ -35,9 +35,11 @@ export async function milestoneRoutes(app: FastifyInstance): Promise<void> {
   // GET /v1/milestones?child_id — computed timeline with done status.
   app.get("/v1/milestones", { preHandler }, async (req: FastifyRequest, reply: FastifyReply) => {
     const childId = (req.query as { child_id?: string }).child_id;
-    if (!childId) return reply.code(400).send({ error: { code: "VALIDATION", message: "child_id required" } });
+    if (!childId)
+      return reply.code(400).send({ error: { code: "VALIDATION", message: "child_id required" } });
     const child = await loadOwnedChild(app, req.parent!.id, childId);
-    if (!child) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+    if (!child)
+      return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
 
     const { data: achievedRows } = await app.db
       .from("milestones")
@@ -59,43 +61,66 @@ export async function milestoneRoutes(app: FastifyInstance): Promise<void> {
       else if (months > m.age_months + 2) status = "past";
       else if (months >= m.age_months - 2) status = "now";
       else status = "upcoming";
-      return { ...m, age_label: ageLabel(m.age_months), status, achieved_on: achieved.get(m.key) ?? null };
+      return {
+        ...m,
+        age_label: ageLabel(m.age_months),
+        status,
+        achieved_on: achieved.get(m.key) ?? null,
+      };
     }).sort((a, b) => a.age_months - b.age_months);
 
     return reply.send({ child_id: childId, age_months: months, milestones: items });
   });
 
   // POST /v1/milestones/:key — mark a milestone done (idempotent upsert).
-  app.post("/v1/milestones/:key", { preHandler }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const key = (req.params as { key: string }).key;
-    const body = (req.body ?? {}) as { child_id?: string; achieved_on?: string };
-    const def = MILESTONES.find((m) => m.key === key);
-    if (!def) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Unknown milestone" } });
-    if (!body.child_id) return reply.code(400).send({ error: { code: "VALIDATION", message: "child_id required" } });
-    const child = await loadOwnedChild(app, req.parent!.id, body.child_id);
-    if (!child) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+  app.post(
+    "/v1/milestones/:key",
+    { preHandler },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const key = (req.params as { key: string }).key;
+      const body = (req.body ?? {}) as { child_id?: string; achieved_on?: string };
+      const def = MILESTONES.find((m) => m.key === key);
+      if (!def)
+        return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Unknown milestone" } });
+      if (!body.child_id)
+        return reply
+          .code(400)
+          .send({ error: { code: "VALIDATION", message: "child_id required" } });
+      const child = await loadOwnedChild(app, req.parent!.id, body.child_id);
+      if (!child)
+        return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
 
-    const { error } = await app.db.from("milestones").upsert(
-      {
-        child_id: body.child_id,
-        milestone_key: key,
-        label: def.label,
-        achieved_on: body.achieved_on ?? new Date().toISOString().slice(0, 10),
-      },
-      { onConflict: "child_id, milestone_key" },
-    );
-    if (error) return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
-    return reply.code(204).send();
-  });
+      const { error } = await app.db.from("milestones").upsert(
+        {
+          child_id: body.child_id,
+          milestone_key: key,
+          label: def.label,
+          achieved_on: body.achieved_on ?? new Date().toISOString().slice(0, 10),
+        },
+        { onConflict: "child_id, milestone_key" },
+      );
+      if (error)
+        return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
+      return reply.code(204).send();
+    },
+  );
 
   // DELETE /v1/milestones/:key?child_id — un-mark.
-  app.delete("/v1/milestones/:key", { preHandler }, async (req: FastifyRequest, reply: FastifyReply) => {
-    const key = (req.params as { key: string }).key;
-    const childId = (req.query as { child_id?: string }).child_id;
-    if (!childId) return reply.code(400).send({ error: { code: "VALIDATION", message: "child_id required" } });
-    const child = await loadOwnedChild(app, req.parent!.id, childId);
-    if (!child) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
-    await app.db.from("milestones").delete().eq("child_id", childId).eq("milestone_key", key);
-    return reply.code(204).send();
-  });
+  app.delete(
+    "/v1/milestones/:key",
+    { preHandler },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const key = (req.params as { key: string }).key;
+      const childId = (req.query as { child_id?: string }).child_id;
+      if (!childId)
+        return reply
+          .code(400)
+          .send({ error: { code: "VALIDATION", message: "child_id required" } });
+      const child = await loadOwnedChild(app, req.parent!.id, childId);
+      if (!child)
+        return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+      await app.db.from("milestones").delete().eq("child_id", childId).eq("milestone_key", key);
+      return reply.code(204).send();
+    },
+  );
 }

@@ -34,7 +34,9 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     if (!guard(req, reply)) return;
     const { data } = await app.db
       .from("broadcasts")
-      .select("id, title, body, url, audience, scheduled_for, status, sent_at, sent_count, created_at")
+      .select(
+        "id, title, body, url, audience, scheduled_for, status, sent_at, sent_count, created_at",
+      )
       .order("scheduled_for", { ascending: false })
       .limit(50);
     return reply.send({ broadcasts: data ?? [] });
@@ -55,18 +57,28 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const sendNow = body.send_now === true;
     const when = sendNow ? new Date() : body.scheduled_for ? new Date(body.scheduled_for) : null;
     if (!title || !message || !when || Number.isNaN(when.getTime())) {
-      return reply.code(400).send({ error: { code: "VALIDATION", message: "title, body, and a time are required" } });
+      return reply
+        .code(400)
+        .send({ error: { code: "VALIDATION", message: "title, body, and a time are required" } });
     }
     const parent = await resolveParent(req);
     const url = normalizeUrl(body.url);
 
     const { data, error } = await app.db
       .from("broadcasts")
-      .insert({ title, body: message, url, scheduled_for: when.toISOString(), created_by: parent?.id ?? null })
+      .insert({
+        title,
+        body: message,
+        url,
+        scheduled_for: when.toISOString(),
+        created_by: parent?.id ?? null,
+      })
       .select("id, title, body, url, scheduled_for, status")
       .single();
     if (error || !data) {
-      return reply.code(500).send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
+      return reply
+        .code(500)
+        .send({ error: { code: "INTERNAL", message: error?.message ?? "insert failed" } });
     }
 
     if (sendNow) {
@@ -89,7 +101,8 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       .select("id, title, body, url, status")
       .eq("id", id)
       .maybeSingle();
-    if (!b) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Broadcast not found" } });
+    if (!b)
+      return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Broadcast not found" } });
     if ((b as { status: string }).status === "sent") {
       return reply.code(409).send({ error: { code: "VALIDATION", message: "Already sent" } });
     }

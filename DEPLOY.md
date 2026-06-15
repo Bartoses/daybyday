@@ -2,11 +2,11 @@
 
 Three hosted pieces, all free-tier:
 
-| Piece | Host | Notes |
-|-------|------|-------|
-| Database + Auth | Supabase | already live (`wclfupgqlrtxptmhggbm`) |
-| API (Fastify) | Railway | builds from the root `Dockerfile` |
-| Web app (Expo web) | Vercel | builds from `vercel.json` |
+| Piece              | Host     | Notes                                 |
+| ------------------ | -------- | ------------------------------------- |
+| Database + Auth    | Supabase | already live (`wclfupgqlrtxptmhggbm`) |
+| API (Fastify)      | Railway  | builds from the root `Dockerfile`     |
+| Web app (Expo web) | Vercel   | builds from `vercel.json`             |
 
 Deploy the **API first** (Vercel needs its URL).
 
@@ -23,7 +23,7 @@ Deploy the **API first** (Vercel needs its URL).
    - `SUPABASE_URL` = `https://wclfupgqlrtxptmhggbm.supabase.co`
    - `SUPABASE_ANON_KEY` = (the anon key from `.env`)
    - `SUPABASE_SERVICE_ROLE_KEY` = (the service-role key from `.env`)
-   - `TWILIO_VALIDATE` = `false`  (SMS leg not used yet)
+   - `TWILIO_VALIDATE` = `false` (SMS leg not used yet)
    - `PORT` is injected by Railway automatically — don't set it.
 4. **Settings → Networking → Generate Domain.** Copy the URL
    (e.g. `https://daybyday-production.up.railway.app`).

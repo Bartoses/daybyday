@@ -8,7 +8,12 @@ import { titleCase } from "../src/format";
 
 type Child = MeResponse["children"][number];
 
-const FALLBACK_META = { emoji: "✨", tint: colors.surfaceAlt, ink: colors.textMuted, label: "Milestone" };
+const FALLBACK_META = {
+  emoji: "✨",
+  tint: colors.surfaceAlt,
+  ink: colors.textMuted,
+  label: "Milestone",
+};
 
 export default function Timeline() {
   const params = useLocalSearchParams<{ child_id?: string }>();
@@ -55,7 +60,11 @@ export default function Timeline() {
     setItems((prev) =>
       prev.map((x) =>
         x.key === m.key
-          ? { ...x, status: markingDone ? "done" : x.age_months <= 0 ? "now" : "upcoming", achieved_on: markingDone ? "today" : null }
+          ? {
+              ...x,
+              status: markingDone ? "done" : x.age_months <= 0 ? "now" : "upcoming",
+              achieved_on: markingDone ? "today" : null,
+            }
           : x,
       ),
     );
@@ -72,7 +81,14 @@ export default function Timeline() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.bg,
+        }}
+      >
         <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
@@ -85,10 +101,23 @@ export default function Timeline() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg, maxWidth: 640, width: "100%", alignSelf: "center" }}
+      contentContainerStyle={{
+        padding: spacing.xl,
+        gap: spacing.lg,
+        maxWidth: 640,
+        width: "100%",
+        alignSelf: "center",
+      }}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.heading }}>
+        <Text
+          style={{
+            fontFamily: fonts.display,
+            fontSize: font.title,
+            fontWeight: "600",
+            color: colors.heading,
+          }}
+        >
           {child ? `${titleCase(child.name)}'s milestones` : "Milestones"}
         </Text>
         <Text
@@ -100,7 +129,11 @@ export default function Timeline() {
       </View>
 
       {children.length > 1 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: spacing.sm }}
+        >
           {children.map((c) => {
             const active = c.id === child?.id;
             return (
@@ -116,7 +149,13 @@ export default function Timeline() {
                   backgroundColor: active ? colors.primary : colors.surface,
                 }}
               >
-                <Text style={{ color: active ? colors.onPrimary : colors.text, fontWeight: active ? "700" : "500", fontSize: font.small }}>
+                <Text
+                  style={{
+                    color: active ? colors.onPrimary : colors.text,
+                    fontWeight: active ? "700" : "500",
+                    fontSize: font.small,
+                  }}
+                >
                   {titleCase(c.name)}
                 </Text>
               </Pressable>
@@ -126,12 +165,32 @@ export default function Timeline() {
       ) : null}
 
       <Text style={{ fontSize: font.tiny, color: colors.textFaint, lineHeight: 18 }}>
-        Every child grows at their own pace — these are general "around when" guides, not a checklist. For any concern, check with your pediatrician.
+        Every child grows at their own pace — these are general "around when" guides, not a
+        checklist. For any concern, check with your pediatrician.
       </Text>
 
-      <Section title="Right around now" items={now} childId={child?.id} busyKey={busyKey} onToggle={toggleDone} emptyHint="Nothing in this window — peek at what's coming up." />
-      <Section title="Coming up" items={upcoming} childId={child?.id} busyKey={busyKey} onToggle={toggleDone} />
-      <Section title="Earlier" items={earlier} childId={child?.id} busyKey={busyKey} onToggle={toggleDone} />
+      <Section
+        title="Right around now"
+        items={now}
+        childId={child?.id}
+        busyKey={busyKey}
+        onToggle={toggleDone}
+        emptyHint="Nothing in this window — peek at what's coming up."
+      />
+      <Section
+        title="Coming up"
+        items={upcoming}
+        childId={child?.id}
+        busyKey={busyKey}
+        onToggle={toggleDone}
+      />
+      <Section
+        title="Earlier"
+        items={earlier}
+        childId={child?.id}
+        busyKey={busyKey}
+        onToggle={toggleDone}
+      />
     </ScrollView>
   );
 }
@@ -154,14 +213,28 @@ function Section({
   if (items.length === 0 && !emptyHint) return null;
   return (
     <View style={{ gap: spacing.sm }}>
-      <Text style={{ fontSize: font.tiny, fontWeight: "800", color: colors.textMuted, letterSpacing: 0.6, textTransform: "uppercase" }}>
+      <Text
+        style={{
+          fontSize: font.tiny,
+          fontWeight: "800",
+          color: colors.textMuted,
+          letterSpacing: 0.6,
+          textTransform: "uppercase",
+        }}
+      >
         {title}
       </Text>
       {items.length === 0 ? (
         <Text style={{ fontSize: font.small, color: colors.textFaint }}>{emptyHint}</Text>
       ) : (
         items.map((m) => (
-          <MilestoneCard key={m.key} m={m} childId={childId} busy={busyKey === m.key} onToggle={onToggle} />
+          <MilestoneCard
+            key={m.key}
+            m={m}
+            childId={childId}
+            busy={busyKey === m.key}
+            onToggle={onToggle}
+          />
         ))
       )}
     </View>
@@ -216,20 +289,43 @@ function MilestoneCard({
           ) : null}
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "600", color: colors.heading }}>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.heading,
+              fontWeight: "600",
+              color: colors.heading,
+            }}
+          >
             {m.label}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: 2 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: meta.tint, borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: spacing.sm }}>
+          <View
+            style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: 2 }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                backgroundColor: meta.tint,
+                borderRadius: radius.pill,
+                paddingVertical: 2,
+                paddingHorizontal: spacing.sm,
+              }}
+            >
               <Text style={{ fontSize: font.tiny }}>{meta.emoji}</Text>
-              <Text style={{ fontSize: font.tiny, fontWeight: "700", color: meta.ink }}>{meta.label}</Text>
+              <Text style={{ fontSize: font.tiny, fontWeight: "700", color: meta.ink }}>
+                {meta.label}
+              </Text>
             </View>
             <Text style={{ fontSize: font.tiny, color: colors.textFaint }}>{m.age_label}</Text>
           </View>
         </View>
       </View>
 
-      <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 21 }}>{m.description}</Text>
+      <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 21 }}>
+        {m.description}
+      </Text>
 
       <Pressable
         onPress={() =>

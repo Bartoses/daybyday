@@ -10,7 +10,11 @@ import { titleCase } from "../src/format";
 type Step = "welcome" | "parent" | "children" | "focus";
 const FORM_STEPS: Step[] = ["parent", "children", "focus"];
 
-const FOCUS_OPTIONS: Array<{ key: "daily_guidance" | "sleep_support" | "big_feelings"; label: string; hint: string }> = [
+const FOCUS_OPTIONS: Array<{
+  key: "daily_guidance" | "sleep_support" | "big_feelings";
+  label: string;
+  hint: string;
+}> = [
   { key: "daily_guidance", label: "Daily guidance", hint: "A little of everything, every day" },
   { key: "sleep_support", label: "Sleep support", hint: "Naps, nights, and routines" },
   { key: "big_feelings", label: "Big feelings", hint: "Tantrums, emotions, connection" },
@@ -84,22 +88,59 @@ export default function Onboarding() {
 
   return (
     <Screen>
-      <View style={{ gap: spacing.xl, maxWidth: 440, width: "100%", alignSelf: "center", flex: 1, justifyContent: step === "welcome" ? "center" : "flex-start" }}>
+      <View
+        style={{
+          gap: spacing.xl,
+          maxWidth: 440,
+          width: "100%",
+          alignSelf: "center",
+          flex: 1,
+          justifyContent: step === "welcome" ? "center" : "flex-start",
+        }}
+      >
         {step === "welcome" && (
           <View style={{ gap: spacing.xl }}>
             <View style={{ gap: spacing.sm }}>
-              <Text style={{ fontFamily: fonts.display, fontSize: font.display, fontWeight: "600", color: colors.text }}>
+              <Text
+                style={{
+                  fontFamily: fonts.display,
+                  fontSize: font.display,
+                  fontWeight: "600",
+                  color: colors.text,
+                }}
+              >
                 Welcome to DaybyDay
               </Text>
-              <Text style={{ fontFamily: fonts.display, fontSize: font.heading, fontWeight: "500", color: colors.text, lineHeight: 28 }}>
-                One age-perfect parenting tip a day — so you always know the next small thing that helps.
+              <Text
+                style={{
+                  fontFamily: fonts.display,
+                  fontSize: font.heading,
+                  fontWeight: "500",
+                  color: colors.text,
+                  lineHeight: 28,
+                }}
+              >
+                One age-perfect parenting tip a day — so you always know the next small thing that
+                helps.
               </Text>
             </View>
 
             <View style={{ gap: spacing.md }}>
-              <ValueRow emoji="🌱" title="A fresh tip every day" body="Bite-sized and matched to your child's exact age and stage." />
-              <ValueRow emoji="💬" title="Ask anything, anytime" body="Get a real, relevant answer about your child in seconds." />
-              <ValueRow emoji="📈" title="It grows with them" body="From newborn nights to big-kid feelings — the whole journey." />
+              <ValueRow
+                emoji="🌱"
+                title="A fresh tip every day"
+                body="Bite-sized and matched to your child's exact age and stage."
+              />
+              <ValueRow
+                emoji="💬"
+                title="Ask anything, anytime"
+                body="Get a real, relevant answer about your child in seconds."
+              />
+              <ValueRow
+                emoji="📈"
+                title="It grows with them"
+                body="From newborn nights to big-kid feelings — the whole journey."
+              />
             </View>
 
             <View style={{ gap: spacing.sm }}>
@@ -117,7 +158,11 @@ export default function Onboarding() {
           <View style={{ gap: spacing.lg }}>
             <Header title="First, what should we call you?" subtitle="Your first name is plenty." />
             <Field label="Your name" value={name} onChangeText={setName} placeholder="Alex" />
-            <Button title="Continue" onPress={() => name.trim() && setStep("children")} disabled={!name.trim()} />
+            <Button
+              title="Continue"
+              onPress={() => name.trim() && setStep("children")}
+              disabled={!name.trim()}
+            />
           </View>
         )}
 
@@ -144,9 +189,13 @@ export default function Onboarding() {
                     }}
                   >
                     <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>
-                      {c.name} <Text style={{ fontWeight: "400", color: colors.textMuted }}>· {c.iso}</Text>
+                      {c.name}{" "}
+                      <Text style={{ fontWeight: "400", color: colors.textMuted }}>· {c.iso}</Text>
                     </Text>
-                    <Text onPress={() => removeChild(i)} style={{ color: colors.danger, fontSize: font.small }}>
+                    <Text
+                      onPress={() => removeChild(i)}
+                      style={{ color: colors.danger, fontSize: font.small }}
+                    >
                       Remove
                     </Text>
                   </View>
@@ -172,14 +221,23 @@ export default function Onboarding() {
               </Text>
             </Pressable>
 
-            {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
-            <Button title="Continue" onPress={continueFromChildren} disabled={children.length === 0 && !draftValid} />
+            {error ? (
+              <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text>
+            ) : null}
+            <Button
+              title="Continue"
+              onPress={continueFromChildren}
+              disabled={children.length === 0 && !draftValid}
+            />
           </View>
         )}
 
         {step === "focus" && (
           <View style={{ gap: spacing.lg }}>
-            <Header title="What matters most right now?" subtitle="We'll lean your tips this way. You can change it anytime." />
+            <Header
+              title="What matters most right now?"
+              subtitle="We'll lean your tips this way. You can change it anytime."
+            />
             <View style={{ gap: spacing.sm }}>
               {FOCUS_OPTIONS.map((opt) => {
                 const selected = focus === opt.key;
@@ -196,15 +254,25 @@ export default function Onboarding() {
                       gap: 2,
                     }}
                   >
-                    <Text style={{ color: colors.text, fontSize: font.body, fontWeight: selected ? "700" : "600" }}>
+                    <Text
+                      style={{
+                        color: colors.text,
+                        fontSize: font.body,
+                        fontWeight: selected ? "700" : "600",
+                      }}
+                    >
                       {opt.label}
                     </Text>
-                    <Text style={{ color: colors.textMuted, fontSize: font.small }}>{opt.hint}</Text>
+                    <Text style={{ color: colors.textMuted, fontSize: font.small }}>
+                      {opt.hint}
+                    </Text>
                   </Pressable>
                 );
               })}
             </View>
-            {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
+            {error ? (
+              <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text>
+            ) : null}
             <Button title="Show me today's tip" onPress={finish} loading={busy} />
             <Text style={{ fontSize: font.tiny, color: colors.textMuted, textAlign: "center" }}>
               You'll land on your first daily card — that's your home base every day.
@@ -246,7 +314,9 @@ function ValueRow({ emoji, title, body }: { emoji: string; title: string; body: 
       <Text style={{ fontSize: font.title }}>{emoji}</Text>
       <View style={{ flex: 1, gap: 1 }}>
         <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>{title}</Text>
-        <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>{body}</Text>
+        <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
+          {body}
+        </Text>
       </View>
     </View>
   );
@@ -255,7 +325,16 @@ function ValueRow({ emoji, title, body }: { emoji: string; title: string; body: 
 function Header({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <View style={{ gap: spacing.xs }}>
-      <Text style={{ fontFamily: fonts.display, fontSize: font.title, fontWeight: "600", color: colors.text }}>{title}</Text>
+      <Text
+        style={{
+          fontFamily: fonts.display,
+          fontSize: font.title,
+          fontWeight: "600",
+          color: colors.text,
+        }}
+      >
+        {title}
+      </Text>
       <Text style={{ fontSize: font.body, color: colors.textMuted }}>{subtitle}</Text>
     </View>
   );

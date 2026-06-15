@@ -19,10 +19,44 @@ interface MatchRow {
 
 // Common words that carry no topical signal for matching.
 const STOP = new Set([
-  "what", "when", "why", "how", "does", "should", "with", "this", "that", "your",
-  "child", "baby", "toddler", "kid", "about", "they", "them", "their", "have",
-  "still", "just", "like", "into", "from", "will", "would", "could", "much",
-  "many", "more", "some", "long", "make", "need", "want", "doing", "right", "now",
+  "what",
+  "when",
+  "why",
+  "how",
+  "does",
+  "should",
+  "with",
+  "this",
+  "that",
+  "your",
+  "child",
+  "baby",
+  "toddler",
+  "kid",
+  "about",
+  "they",
+  "them",
+  "their",
+  "have",
+  "still",
+  "just",
+  "like",
+  "into",
+  "from",
+  "will",
+  "would",
+  "could",
+  "much",
+  "many",
+  "more",
+  "some",
+  "long",
+  "make",
+  "need",
+  "want",
+  "doing",
+  "right",
+  "now",
 ]);
 
 function tokenize(q: string): string[] {
@@ -57,7 +91,8 @@ export async function matchTipForQuestion(
   let bestScore = 0;
 
   for (const r of rows) {
-    const hay = `${(r.keywords ?? []).join(" ")} ${r.insight} ${r.action_tip} ${r.category} ${r.development_focus ?? ""} ${r.follow_up_prompt ?? ""}`.toLowerCase();
+    const hay =
+      `${(r.keywords ?? []).join(" ")} ${r.insight} ${r.action_tip} ${r.category} ${r.development_focus ?? ""} ${r.follow_up_prompt ?? ""}`.toLowerCase();
     let score = 0;
     for (const t of tokens) if (hay.includes(t)) score += 1;
     if (score > bestScore) {
@@ -73,11 +108,7 @@ export async function matchTipForQuestion(
  * Curated FAQ for a child's age: distinct `follow_up_prompt` questions, one per
  * category first (for variety) then topped up, capped at `limit`.
  */
-export async function faqForAge(
-  db: SupabaseClient,
-  ageDays: number,
-  limit = 6,
-): Promise<string[]> {
+export async function faqForAge(db: SupabaseClient, ageDays: number, limit = 6): Promise<string[]> {
   const { data } = await db
     .from("content_items")
     .select("category, follow_up_prompt")

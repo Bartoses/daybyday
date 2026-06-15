@@ -1,13 +1,13 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { FeedTodayQuery, QuickActionRequest, FeedbackRequest, type Category } from "@daybyday/schemas";
+import {
+  FeedTodayQuery,
+  QuickActionRequest,
+  FeedbackRequest,
+  type Category,
+} from "@daybyday/schemas";
 import { makeAuthPreHandler } from "../plugins/auth.js";
 import { makeRequireParent } from "../plugins/parent.js";
-import {
-  selectFeedCard,
-  loadCardByTip,
-  dateKey,
-  type ChildRow,
-} from "../feed/service.js";
+import { selectFeedCard, loadCardByTip, dateKey, type ChildRow } from "../feed/service.js";
 
 const CHILD_COLUMNS = "id, parent_id, name, birthdate, due_date";
 
@@ -55,7 +55,8 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
     }
     const parentId = req.parent!.id;
     const child = await loadOwnedChild(app, parentId, parsed.data.child_id);
-    if (!child) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+    if (!child)
+      return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
 
     const now = new Date();
     const today = dateKey(now);
@@ -80,7 +81,10 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
       now,
       timezone: req.parent!.timezone,
     });
-    if (!card) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "No content available" } });
+    if (!card)
+      return reply
+        .code(404)
+        .send({ error: { code: "NOT_FOUND", message: "No content available" } });
 
     // Log the daily send (unique index enforces one per child/day).
     const { error } = await app.db.from("messages").insert({
@@ -112,11 +116,14 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
     async (req: FastifyRequest, reply: FastifyReply) => {
       const parsed = QuickActionRequest.safeParse(req.body);
       if (!parsed.success) {
-        return reply.code(400).send({ error: { code: "VALIDATION", message: parsed.error.message } });
+        return reply
+          .code(400)
+          .send({ error: { code: "VALIDATION", message: parsed.error.message } });
       }
       const parentId = req.parent!.id;
       const child = await loadOwnedChild(app, parentId, parsed.data.child_id);
-      if (!child) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
+      if (!child)
+        return reply.code(404).send({ error: { code: "NOT_FOUND", message: "Child not found" } });
 
       const now = new Date();
       const today = dateKey(now);
@@ -132,7 +139,10 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
         now,
         timezone: req.parent!.timezone,
       });
-      if (!card) return reply.code(404).send({ error: { code: "NOT_FOUND", message: "No content available" } });
+      if (!card)
+        return reply
+          .code(404)
+          .send({ error: { code: "NOT_FOUND", message: "No content available" } });
 
       await app.db.from("messages").insert({
         parent_id: parentId,
@@ -162,7 +172,9 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
       const { tip_id } = req.params as { tip_id: string };
       const parsed = FeedbackRequest.safeParse(req.body);
       if (!parsed.success) {
-        return reply.code(400).send({ error: { code: "VALIDATION", message: parsed.error.message } });
+        return reply
+          .code(400)
+          .send({ error: { code: "VALIDATION", message: parsed.error.message } });
       }
       const { error } = await app.db.from("tip_feedback").upsert(
         {
@@ -173,7 +185,8 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
         },
         { onConflict: "parent_id, child_id, tip_id" },
       );
-      if (error) return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
+      if (error)
+        return reply.code(500).send({ error: { code: "INTERNAL", message: error.message } });
       return reply.code(204).send();
     },
   );

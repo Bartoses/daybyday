@@ -30,7 +30,14 @@ export default function SignIn() {
     <Screen style={{ justifyContent: "center" }}>
       <View style={{ gap: spacing.lg, maxWidth: 420, width: "100%", alignSelf: "center" }}>
         <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
-          <Text style={{ fontFamily: fonts.display, fontSize: font.display, fontWeight: "600", color: colors.text }}>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.display,
+              fontWeight: "600",
+              color: colors.text,
+            }}
+          >
             DaybyDay
           </Text>
           <Text style={{ fontSize: font.body, color: colors.textMuted }}>
@@ -49,7 +56,9 @@ export default function SignIn() {
                 {line}
               </Text>
             ))}
-            <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>Free · Takes 2 minutes to set up</Text>
+            <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>
+              Free · Takes 2 minutes to set up
+            </Text>
           </View>
         ) : null}
 
@@ -69,9 +78,7 @@ export default function SignIn() {
           placeholder="••••••••"
         />
 
-        {error ? (
-          <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text>
-        ) : null}
+        {error ? <Text style={{ color: colors.danger, fontSize: font.small }}>{error}</Text> : null}
 
         <Button
           title={mode === "signin" ? "Sign in" : "Create account"}
@@ -83,9 +90,7 @@ export default function SignIn() {
           onPress={() => setMode(mode === "signin" ? "signup" : "signin")}
           style={{ color: colors.primary, fontSize: font.small, textAlign: "center" }}
         >
-          {mode === "signin"
-            ? "New here? Create an account"
-            : "Already have an account? Sign in"}
+          {mode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}
         </Text>
       </View>
     </Screen>

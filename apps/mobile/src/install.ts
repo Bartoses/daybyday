@@ -29,7 +29,8 @@ if (isWeb()) {
 export function isStandalone(): boolean {
   if (!isWeb()) return false;
   const mql = window.matchMedia?.("(display-mode: standalone)").matches ?? false;
-  const iosStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  const iosStandalone =
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
   return mql || iosStandalone;
 }
 

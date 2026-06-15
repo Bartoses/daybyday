@@ -64,11 +64,7 @@ function parseBool(value: unknown, defaultValue: boolean): boolean {
 }
 
 /** Port of getKnowledgeCell_: returns the first matching candidate or empty string. */
-export function getCell(
-  headers: string[],
-  row: string[],
-  candidates: string[],
-): string {
+export function getCell(headers: string[], row: string[], candidates: string[]): string {
   for (const candidate of candidates) {
     const idx = headers.indexOf(candidate);
     if (idx !== -1) return clean(row[idx]);
@@ -115,17 +111,87 @@ export function canonicalizeCategory(raw: string): DbCategory {
   // Order matters: safety and sleep win over more generic domains.
   if (has("safety", "choking", "burn")) return "safety";
   if (has("sleep")) return "sleep";
-  if (has("feeding", "solid", "allergen", "picky", "swallow", "satiety", "eating", "nursing", "breastfeed", "bottle")) {
+  if (
+    has(
+      "feeding",
+      "solid",
+      "allergen",
+      "picky",
+      "swallow",
+      "satiety",
+      "eating",
+      "nursing",
+      "breastfeed",
+      "bottle",
+    )
+  ) {
     return "feeding";
   }
-  if (has("tantrum", "discipline", "aggression", "behavior", "frustration", "screen time", "chore", "defian", "routine")) {
+  if (
+    has(
+      "tantrum",
+      "discipline",
+      "aggression",
+      "behavior",
+      "frustration",
+      "screen time",
+      "chore",
+      "defian",
+      "routine",
+    )
+  ) {
     return "behavior";
   }
-  if (has("language", "literacy", "reading", "story", "play", "cognitive", "montessori", "imagination", "music", "executive", "attention", "school readiness", "learning")) {
+  if (
+    has(
+      "language",
+      "literacy",
+      "reading",
+      "story",
+      "play",
+      "cognitive",
+      "montessori",
+      "imagination",
+      "music",
+      "executive",
+      "attention",
+      "school readiness",
+      "learning",
+    )
+  ) {
     return "learning_play";
   }
   if (has("motor", "sensory", "physical", "mobility", "milestone")) return "development";
-  if (has("emotional", "attachment", "regulation", "crying", "anxiety", "separation", "resilience", "confidence", "mental health", "stress", "stranger", "identity", "social", "friend", "peer", "belonging", "autonomy", "independence", "parent", "caregiver", "wellbeing", "soothing", "voice", "smil", "bonding", "co-regulation")) {
+  if (
+    has(
+      "emotional",
+      "attachment",
+      "regulation",
+      "crying",
+      "anxiety",
+      "separation",
+      "resilience",
+      "confidence",
+      "mental health",
+      "stress",
+      "stranger",
+      "identity",
+      "social",
+      "friend",
+      "peer",
+      "belonging",
+      "autonomy",
+      "independence",
+      "parent",
+      "caregiver",
+      "wellbeing",
+      "soothing",
+      "voice",
+      "smil",
+      "bonding",
+      "co-regulation",
+    )
+  ) {
     return "emotional";
   }
 
@@ -200,12 +266,8 @@ export function normalizeRow(
   const rawCategory = getCell(headers, row, ["category", "topic"]);
   const category = canonicalizeCategory(rawCategory);
 
-  const insight = clean(
-    getCell(headers, row, ["insight_explanation", "insight", "summary"]),
-  );
-  const actionTip = clean(
-    getCell(headers, row, ["action_tip", "action", "tip", "sms_tip"]),
-  );
+  const insight = clean(getCell(headers, row, ["insight_explanation", "insight", "summary"]));
+  const actionTip = clean(getCell(headers, row, ["action_tip", "action", "tip", "sms_tip"]));
   const reassurance = clean(
     getCell(headers, row, ["parent_reassurance", "encouragement", "reassurance"]),
   );
@@ -249,18 +311,11 @@ export function normalizeRow(
     signs_of_healthy_development: nullIfEmpty(
       clean(getCell(headers, row, ["signs_of_healthy_development"])),
     ),
-    when_to_consult_doctor: nullIfEmpty(
-      clean(getCell(headers, row, ["when_to_consult_doctor"])),
-    ),
-    development_focus: nullIfEmpty(
-      clean(getCell(headers, row, ["development_focus"])),
-    ),
-    keywords: normalizeKeywords(
-      getCell(headers, row, ["keywords", "development_focus"]),
-    ),
+    when_to_consult_doctor: nullIfEmpty(clean(getCell(headers, row, ["when_to_consult_doctor"]))),
+    development_focus: nullIfEmpty(clean(getCell(headers, row, ["development_focus"]))),
+    keywords: normalizeKeywords(getCell(headers, row, ["keywords", "development_focus"])),
     difficulty_level: normalizeDifficulty(getCell(headers, row, ["difficulty_level"])),
-    rotation_group:
-      nullIfEmpty(clean(getCell(headers, row, ["rotation_group"]))) ?? category,
+    rotation_group: nullIfEmpty(clean(getCell(headers, row, ["rotation_group"]))) ?? category,
     priority_weight: Number(getCell(headers, row, ["priority_weight", "priority"]) || 1),
     cooldown_days: Number(getCell(headers, row, ["cooldown_days"]) || 21),
     // Gated rows are all daily tips; the new sheet's message_type column mirrors
@@ -269,12 +324,8 @@ export function normalizeRow(
     milestone_key: nullIfEmpty(clean(getCell(headers, row, ["milestone_key"]))),
     checkin_question: nullIfEmpty(clean(getCell(headers, row, ["checkin_question"]))),
     reply_options: nullIfEmpty(clean(getCell(headers, row, ["reply_options"]))),
-    youtube_resource_title: nullIfEmpty(
-      clean(getCell(headers, row, ["youtube_resource_title"])),
-    ),
-    youtube_resource_link: nullIfEmpty(
-      clean(getCell(headers, row, ["youtube_resource_link"])),
-    ),
+    youtube_resource_title: nullIfEmpty(clean(getCell(headers, row, ["youtube_resource_title"]))),
+    youtube_resource_link: nullIfEmpty(clean(getCell(headers, row, ["youtube_resource_link"]))),
     book_resource: nullIfEmpty(clean(getCell(headers, row, ["book_resource"]))),
     research_reference: nullIfEmpty(clean(getCell(headers, row, ["research_reference"]))),
     active: activeRaw === "" ? true : parseBool(activeRaw, true),

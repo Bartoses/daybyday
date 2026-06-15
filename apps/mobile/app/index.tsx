@@ -44,7 +44,14 @@ export default function Index() {
   }, [session, loading]);
 
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: colors.bg,
+      }}
+    >
       <ActivityIndicator color={colors.primary} size="large" />
       {checking ? null : null}
     </View>
