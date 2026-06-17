@@ -12,6 +12,7 @@ const testConfig: AppConfig = {
   cronSecret: "test-secret",
   adminEmail: "admin@daybyday.test",
   day: { apiKey: "", model: "claude-sonnet-4-6", freeDailyLimit: 10 },
+  email: { apiKey: "", from: "DaybyDay <test@daybyday.test>", appUrl: "https://app.test" },
 };
 
 /**

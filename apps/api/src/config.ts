@@ -31,6 +31,13 @@ export interface AppConfig {
     /** Assistant replies a free-tier parent gets per day. 0 = unlimited. */
     freeDailyLimit: number;
   };
+  /** Transactional email (Resend) for the weekly digest. */
+  email: {
+    apiKey: string;
+    from: string;
+    /** Web app URL used for email CTAs. */
+    appUrl: string;
+  };
 }
 
 function env(key: string, fallback = ""): string {
@@ -64,6 +71,11 @@ export function loadConfig(): AppConfig {
       apiKey: env("ANTHROPIC_API_KEY"),
       model: env("DAY_MODEL", "claude-sonnet-4-6"),
       freeDailyLimit: Number(env("DAY_FREE_DAILY_LIMIT", "10")),
+    },
+    email: {
+      apiKey: env("RESEND_API_KEY"),
+      from: env("RESEND_FROM", "DaybyDay <hello@daybyday.app>"),
+      appUrl: env("WEB_URL", "https://daybyday-api.vercel.app"),
     },
   };
 }

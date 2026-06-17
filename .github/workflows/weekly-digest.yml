@@ -1,0 +1,18 @@
+name: Weekly email digest
+
+# Sunday ~9am US Mountain (15:00 UTC). The endpoint dedupes to once per ~week
+# per parent, so an occasional extra trigger is harmless.
+on:
+  schedule:
+    - cron: "0 15 * * 0"
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger weekly-digest endpoint
+        run: |
+          curl -sS --fail-with-body -X POST \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://daybydayapi-production.up.railway.app/v1/internal/cron/weekly-digest

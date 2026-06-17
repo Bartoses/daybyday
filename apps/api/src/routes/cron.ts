@@ -3,6 +3,9 @@ import { hashString } from "@daybyday/engine";
 import type { Category } from "@daybyday/schemas";
 import { selectFeedCard, localHour, type ChildRow } from "../feed/service.js";
 import { sendToParent, sendBroadcastToAll } from "../push/service.js";
+import { sendEmail } from "../email/resend.js";
+import { buildWeeklyDigest } from "../email/digest.js";
+import { MILESTONES, ageMonths } from "../milestones/data.js";
 
 interface ParentRow {
   id: string;
@@ -150,4 +153,157 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
 
     return reply.send({ considered, sent, broadcastsSent });
   });
+
+  // Weekly digest — a warm Sunday recap email to every parent with email on.
+  // Triggered weekly by GitHub Actions; deduped to once per ~week per parent.
+  app.post("/v1/internal/cron/weekly-digest", async (req: FastifyRequest, reply: FastifyReply) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!app.config.cronSecret || secret !== app.config.cronSecret) {
+      return reply.code(403).send({ error: { code: "FORBIDDEN", message: "Invalid cron secret" } });
+    }
+    if (!app.config.email.apiKey) {
+      return reply.send({ skipped: "email not configured", considered: 0, sent: 0 });
+    }
+
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const since7 = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10);
+    const dedupeSince = new Date(now.getTime() - 6 * 86400000).toISOString().slice(0, 10);
+
+    const { data: parents } = await app.db
+      .from("parents")
+      .select("id, name, auth_user_id, timezone");
+    const rows = (parents ?? []) as Array<{
+      id: string;
+      name: string | null;
+      auth_user_id: string | null;
+      timezone: string;
+    }>;
+    if (rows.length === 0) return reply.send({ considered: 0, sent: 0 });
+    const ids = rows.map((p) => p.id);
+
+    const [{ data: prefs }, { data: children }, { data: recent }, authList] = await Promise.all([
+      app.db.from("notification_prefs").select("parent_id, email_enabled").in("parent_id", ids),
+      app.db
+        .from("children")
+        .select("id, parent_id, name, birthdate, due_date, created_at")
+        .in("parent_id", ids)
+        .order("created_at", { ascending: true }),
+      app.db
+        .from("messages")
+        .select("parent_id")
+        .eq("message_type", "weekly_digest")
+        .gte("send_date", dedupeSince)
+        .in("parent_id", ids),
+      app.db.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    ]);
+
+    const emailOff = new Set(
+      ((prefs ?? []) as Array<{ parent_id: string; email_enabled: boolean }>)
+        .filter((p) => p.email_enabled === false)
+        .map((p) => p.parent_id),
+    );
+    const firstChild = new Map<string, ChildRow & { parent_id: string }>();
+    for (const c of (children ?? []) as Array<ChildRow & { parent_id: string }>) {
+      if (!firstChild.has(c.parent_id)) firstChild.set(c.parent_id, c);
+    }
+    const alreadySent = new Set(
+      ((recent ?? []) as Array<{ parent_id: string }>).map((r) => r.parent_id),
+    );
+    const emailByUser = new Map<string, string>();
+    for (const u of authList.data?.users ?? []) {
+      if (u.id && u.email) emailByUser.set(u.id, u.email);
+    }
+
+    let considered = 0;
+    let sent = 0;
+
+    for (const p of rows) {
+      if (emailOff.has(p.id) || alreadySent.has(p.id)) continue;
+      const email = p.auth_user_id ? emailByUser.get(p.auth_user_id) : undefined;
+      const child = firstChild.get(p.id);
+      if (!email || !child) continue;
+      considered += 1;
+
+      const card = await selectFeedCard(app.db, p.id, child, {
+        isDaily: true,
+        now,
+        timezone: p.timezone,
+      });
+      const months = child.birthdate ? ageMonths(child.birthdate, now) : 0;
+      const next = MILESTONES.filter((m) => m.age_months > months).sort(
+        (a, b) => a.age_months - b.age_months,
+      )[0];
+
+      const { data: dd } = await app.db
+        .from("messages")
+        .select("send_date")
+        .eq("parent_id", p.id)
+        .eq("message_type", "daily")
+        .order("send_date", { ascending: false })
+        .limit(400);
+      const dates = new Set(
+        ((dd ?? []) as Array<{ send_date: string | null }>)
+          .map((r) => r.send_date)
+          .filter((d): d is string => Boolean(d)),
+      );
+
+      const { subject, html } = buildWeeklyDigest({
+        parentName: p.name?.trim() || "there",
+        childName: child.name,
+        tipsThisWeek: [...dates].filter((d) => d >= since7).length,
+        totalTips: dates.size,
+        streak: currentStreak(dates, today),
+        featured: card ? { insight: card.insight, action: card.action_tip } : null,
+        milestone: next
+          ? {
+              label: next.label,
+              age_label: monthsLabel(next.age_months),
+              description: next.description,
+            }
+          : null,
+        appUrl: app.config.email.appUrl,
+      });
+
+      const ok = await sendEmail(app.config, { to: email, subject, html });
+      if (ok) {
+        sent += 1;
+        await app.db.from("messages").insert({
+          parent_id: p.id,
+          child_id: child.id,
+          message_type: "weekly_digest",
+          channel: "email",
+          send_status: "sent",
+          send_date: today,
+          sent_at: now.toISOString(),
+        });
+      }
+    }
+
+    return reply.send({ considered, sent });
+  });
+}
+
+/** Consecutive-day streak ending today/yesterday, from a set of YYYY-MM-DD keys. */
+function currentStreak(dates: Set<string>, today: string): number {
+  const shift = (key: string, delta: number): string => {
+    const d = new Date(`${key}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + delta);
+    return d.toISOString().slice(0, 10);
+  };
+  let anchor = dates.has(today) ? today : dates.has(shift(today, -1)) ? shift(today, -1) : null;
+  let n = 0;
+  while (anchor && dates.has(anchor)) {
+    n += 1;
+    anchor = shift(anchor, -1);
+  }
+  return n;
+}
+
+/** "~6 months" / "~3 years" for a milestone's typical age. */
+function monthsLabel(months: number): string {
+  if (months < 1) return "Newborn";
+  if (months < 24) return `~${months} month${months === 1 ? "" : "s"}`;
+  const years = Math.round(months / 12);
+  return `~${years} year${years === 1 ? "" : "s"}`;
 }
