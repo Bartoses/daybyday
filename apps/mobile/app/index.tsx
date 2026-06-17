@@ -2,8 +2,22 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../src/auth";
-import { api } from "../src/api-client";
+import { api, ApiError } from "../src/api-client";
 import { colors } from "../src/theme";
+
+/** Resolve the account with a couple of retries so a transient API hiccup
+ * (e.g. a Railway cold start) doesn't get mistaken for "no account". */
+async function resolveMe(retries = 2): Promise<Awaited<ReturnType<typeof api.me>>> {
+  try {
+    return await api.me();
+  } catch (e) {
+    // A real 404 means no account yet — don't retry, let the caller onboard.
+    if (e instanceof ApiError && e.status === 404) throw e;
+    if (retries <= 0) throw e;
+    await new Promise((r) => setTimeout(r, 600));
+    return resolveMe(retries - 1);
+  }
+}
 
 /**
  * Entry router. Decides where to send the user:
@@ -25,16 +39,19 @@ export default function Index() {
 
     let cancelled = false;
     setChecking(true);
-    api
-      .me()
+    resolveMe()
       .then((me) => {
         if (cancelled) return;
         const onboarded = me.parent.onboarding_step === "ONBOARDED" && me.children.length > 0;
         router.replace(onboarded ? "/today" : "/onboarding");
       })
-      .catch(() => {
-        // No account yet (404) or API down -> start onboarding.
-        if (!cancelled) router.replace("/onboarding");
+      .catch((e) => {
+        if (cancelled) return;
+        // Only a real 404 means "no account" → onboard. On any other failure the
+        // user has a valid session, so send them to Today (which re-checks) rather
+        // than bouncing them back to the Welcome/onboarding screen.
+        if (e instanceof ApiError && e.status === 404) router.replace("/onboarding");
+        else router.replace("/today");
       })
       .finally(() => !cancelled && setChecking(false));
 

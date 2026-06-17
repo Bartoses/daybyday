@@ -148,6 +148,18 @@ export default function Onboarding() {
               <Text style={{ fontSize: font.tiny, color: colors.textMuted, textAlign: "center" }}>
                 Takes about 2 minutes · Free · No spam
               </Text>
+              <Text
+                onPress={() => router.push({ pathname: "/sign-in", params: { mode: "signin" } })}
+                style={{
+                  fontSize: font.small,
+                  color: colors.primaryPress,
+                  fontWeight: "700",
+                  textAlign: "center",
+                  marginTop: spacing.sm,
+                }}
+              >
+                Already have an account? Log in
+              </Text>
             </View>
           </View>
         )}

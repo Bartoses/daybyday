@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/auth";
 import { Button, Field, Screen } from "../src/components/ui";
 import { colors, font, fonts, spacing } from "../src/theme";
 
 export default function SignIn() {
   const { signInWithPassword, signUp } = useAuth();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const [mode, setMode] = useState<"signin" | "signup">(
+    params.mode === "signin" ? "signin" : "signup",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -58,7 +58,12 @@ export default function Today() {
           .then(setProgress)
           .catch(() => {});
       })
-      .catch(() => router.replace("/onboarding"))
+      .catch((e) => {
+        // Only onboard on a real "no account" 404; transient errors keep the
+        // signed-in user here instead of bouncing them to the Welcome screen.
+        if (e instanceof ApiError && e.status === 404) router.replace("/onboarding");
+        else setError("Couldn't reach DaybyDay. Check your connection and try again.");
+      })
       .finally(() => setLoading(false));
   }, [loadCard]);
 
@@ -245,6 +250,9 @@ export default function Today() {
           </Card>
         )}
 
+        {/* Feature discovery — rotating, dismissible, deep-links into a feature */}
+        {child ? <FeatureNudge child={child} /> : null}
+
         {/* Install / notifications nudge — shown after the value (the card) */}
         <GrowthPrompt />
 
@@ -344,6 +352,104 @@ function StreakBar({ progress }: { progress: Progress }) {
           {tips_learned} {tips_learned === 1 ? "tip" : "tips"} learned
         </Text>
       ) : null}
+    </View>
+  );
+}
+
+/** Today's date key (UTC) for once-a-day nudge dismissal. */
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+function nudgeDismissedToday(): boolean {
+  try {
+    return globalThis.localStorage?.getItem("nudge_dismissed") === todayKey();
+  } catch {
+    return false;
+  }
+}
+function dismissNudgeToday(): void {
+  try {
+    globalThis.localStorage?.setItem("nudge_dismissed", todayKey());
+  } catch {
+    /* native / no storage — session dismissal only */
+  }
+}
+
+/**
+ * Rotating, dismissible feature callout — surfaces a feature the daily card alone
+ * wouldn't (Ask Day, the milestones timeline). One per day, deep-links in.
+ */
+function FeatureNudge({ child }: { child: Child }) {
+  const name = titleCase(child.name);
+  const nudges = [
+    {
+      feature: "ask",
+      emoji: "💬",
+      text: `Stuck on something with ${name}? Ask Day for a real answer in seconds.`,
+      go: () => router.push({ pathname: "/ask", params: { child_id: child.id } }),
+    },
+    {
+      feature: "timeline",
+      emoji: "📈",
+      text: `See what's ahead for ${name} — milestones from solids to first words.`,
+      go: () => router.push({ pathname: "/timeline", params: { child_id: child.id } }),
+    },
+  ];
+  // Rotate by day so it varies without tracking per-user state.
+  const dayNum = Math.floor(Date.now() / 86400000);
+  const nudge = nudges[dayNum % nudges.length]!;
+
+  const [hidden, setHidden] = useState(() => nudgeDismissedToday());
+  useEffect(() => {
+    if (!hidden) track("nudge_shown", { feature: nudge.feature });
+  }, [hidden, nudge.feature]);
+
+  if (hidden) return null;
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.md,
+        backgroundColor: colors.accentSoft,
+        borderRadius: radius.button,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+      }}
+    >
+      <Text style={{ fontSize: font.heading }}>{nudge.emoji}</Text>
+      <Pressable
+        style={{ flex: 1 }}
+        onPress={() => {
+          track("nudge_tap", { feature: nudge.feature });
+          nudge.go();
+        }}
+      >
+        <Text
+          style={{ fontSize: font.small, color: colors.text, lineHeight: 20, fontWeight: "600" }}
+        >
+          {nudge.text}
+        </Text>
+        <Text
+          style={{
+            fontSize: font.small,
+            color: colors.primaryPress,
+            fontWeight: "700",
+            marginTop: 2,
+          }}
+        >
+          Try it →
+        </Text>
+      </Pressable>
+      <Text
+        onPress={() => {
+          dismissNudgeToday();
+          setHidden(true);
+        }}
+        style={{ fontSize: font.heading, color: colors.textFaint, paddingHorizontal: spacing.xs }}
+      >
+        ×
+      </Text>
     </View>
   );
 }
