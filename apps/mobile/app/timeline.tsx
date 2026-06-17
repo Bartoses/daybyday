@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import type { MeResponse } from "@daybyday/schemas";
-import { api, type MilestoneItem } from "../src/api-client";
+import { api, track, type MilestoneItem } from "../src/api-client";
 import { colors, font, fonts, radius, spacing, categoryMeta } from "../src/theme";
 import { titleCase } from "../src/format";
 
@@ -33,6 +33,7 @@ export default function Timeline() {
   }
 
   useEffect(() => {
+    track("screen_view", { screen: "timeline" });
     api
       .me()
       .then(async (m) => {

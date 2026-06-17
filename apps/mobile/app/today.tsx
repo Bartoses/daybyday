@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import type { FeedCard, MeResponse, RequestType } from "@daybyday/schemas";
-import { api, ApiError } from "../src/api-client";
+import { api, ApiError, track } from "../src/api-client";
 import { useAuth } from "../src/auth";
 import { Button, Card, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
@@ -43,6 +43,7 @@ export default function Today() {
   }, []);
 
   useEffect(() => {
+    track("screen_view", { screen: "today" });
     api
       .me()
       .then(async (m) => {

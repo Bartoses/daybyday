@@ -180,7 +180,32 @@ export const api = {
 
   cancelBroadcast: (id: string) =>
     request<void>(`/v1/admin/broadcasts/${encodeURIComponent(id)}`, { method: "DELETE" }),
+
+  adminAnalytics: () => request<Analytics>("/v1/admin/analytics"),
 };
+
+export interface AnalyticsWindow {
+  active_parents: number;
+  daily_views: number;
+  quick_actions: number;
+  day_questions: number;
+  milestones_marked: number;
+}
+export interface Analytics {
+  totals: { parents: number; children: number; parents_with_push: number };
+  last7: AnalyticsWindow;
+  last30: AnalyticsWindow;
+  screens: { name: string; count: number }[];
+  top_events: { name: string; count: number }[];
+}
+
+/** Fire-and-forget product-analytics event. Never throws into the UI. */
+export function track(name: string, props?: Record<string, unknown>): void {
+  void request<void>("/v1/events", {
+    method: "POST",
+    body: JSON.stringify({ name, props }),
+  }).catch(() => {});
+}
 
 export interface Broadcast {
   id: string;

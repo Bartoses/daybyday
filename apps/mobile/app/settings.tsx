@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import type { MeResponse } from "@daybyday/schemas";
-import { api, ApiError } from "../src/api-client";
+import { api, ApiError, track } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, Select, type DateParts } from "../src/components/form";
 import { colors, font, fonts, radius, spacing, categoryLabels } from "../src/theme";
@@ -67,6 +67,7 @@ export default function Settings() {
   }
 
   useEffect(() => {
+    track("screen_view", { screen: "settings" });
     refresh()
       .catch(() => router.replace("/onboarding"))
       .finally(() => setLoading(false));

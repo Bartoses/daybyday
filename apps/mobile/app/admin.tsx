@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
-import { api, ApiError, type Broadcast } from "../src/api-client";
+import { api, ApiError, type Analytics, type Broadcast } from "../src/api-client";
 import { Button, Card, Field, Screen } from "../src/components/ui";
 import { Select } from "../src/components/form";
 import { colors, font, fonts, radius, spacing } from "../src/theme";
@@ -37,6 +37,7 @@ function dayOptions(): { value: string; label: string }[] {
 export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
+  const [stats, setStats] = useState<Analytics | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("");
@@ -59,6 +60,10 @@ export default function Admin() {
           router.replace("/today");
           return null;
         }
+        api
+          .adminAnalytics()
+          .then(setStats)
+          .catch(() => {});
         return refresh();
       })
       .catch(() => router.replace("/today"))
@@ -156,6 +161,70 @@ export default function Admin() {
             Done
           </Text>
         </View>
+
+        {/* Usage dashboard */}
+        {stats ? (
+          <Card style={{ gap: spacing.md }}>
+            <Text style={{ fontSize: font.heading, fontWeight: "700", color: colors.text }}>
+              Usage
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.lg }}>
+              <Stat label="Parents" value={stats.totals.parents} />
+              <Stat label="Children" value={stats.totals.children} />
+              <Stat label="On push" value={stats.totals.parents_with_push} />
+            </View>
+
+            <Text
+              style={{
+                fontSize: font.tiny,
+                fontWeight: "800",
+                color: colors.textMuted,
+                letterSpacing: 0.6,
+                textTransform: "uppercase",
+                marginTop: spacing.xs,
+              }}
+            >
+              Last 7 days
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.lg }}>
+              <Stat label="Active" value={stats.last7.active_parents} />
+              <Stat label="Daily tips" value={stats.last7.daily_views} />
+              <Stat label="Quick actions" value={stats.last7.quick_actions} />
+              <Stat label="Day Qs" value={stats.last7.day_questions} />
+              <Stat label="Milestones" value={stats.last7.milestones_marked} />
+            </View>
+
+            {stats.screens.length > 0 ? (
+              <>
+                <Text
+                  style={{
+                    fontSize: font.tiny,
+                    fontWeight: "800",
+                    color: colors.textMuted,
+                    letterSpacing: 0.6,
+                    textTransform: "uppercase",
+                    marginTop: spacing.xs,
+                  }}
+                >
+                  Screen opens (30d)
+                </Text>
+                {stats.screens.map((s) => (
+                  <View
+                    key={s.name}
+                    style={{ flexDirection: "row", justifyContent: "space-between" }}
+                  >
+                    <Text style={{ fontSize: font.small, color: colors.text }}>{s.name}</Text>
+                    <Text
+                      style={{ fontSize: font.small, color: colors.textMuted, fontWeight: "700" }}
+                    >
+                      {s.count}
+                    </Text>
+                  </View>
+                ))}
+              </>
+            ) : null}
+          </Card>
+        ) : null}
 
         {/* Composer */}
         <Card style={{ gap: spacing.md }}>
@@ -257,6 +326,24 @@ export default function Admin() {
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <View style={{ minWidth: 72 }}>
+      <Text
+        style={{
+          fontFamily: fonts.display,
+          fontSize: font.title,
+          fontWeight: "600",
+          color: colors.heading,
+        }}
+      >
+        {value}
+      </Text>
+      <Text style={{ fontSize: font.tiny, color: colors.textMuted }}>{label}</Text>
+    </View>
   );
 }
 

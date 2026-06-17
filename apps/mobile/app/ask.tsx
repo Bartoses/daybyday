@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import type { MeResponse } from "@daybyday/schemas";
-import { api, ApiError, dayChat, type DayMessage } from "../src/api-client";
+import { api, ApiError, dayChat, track, type DayMessage } from "../src/api-client";
 import { colors, font, fonts, radius, spacing, shadow } from "../src/theme";
 import { titleCase } from "../src/format";
 
@@ -37,6 +37,7 @@ export default function AskDay() {
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
+    track("screen_view", { screen: "ask" });
     Promise.all([
       api.me(),
       api.dayHistory().catch(() => ({ messages: [] as DayMessage[], limit: 0 })),
