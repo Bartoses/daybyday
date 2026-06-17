@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import type { FeedCard, MeResponse, RequestType } from "@daybyday/schemas";
-import { api, ApiError, track } from "../src/api-client";
+import { api, ApiError, track, type Progress } from "../src/api-client";
 import { useAuth } from "../src/auth";
 import { Button, Card, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
@@ -29,6 +29,7 @@ export default function Today() {
   const [cardLoading, setCardLoading] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
 
   const loadCard = useCallback(async (c: Child) => {
     setError(null);
@@ -51,6 +52,11 @@ export default function Today() {
         const first = m.children[0] ?? null;
         setChild(first);
         if (first) await loadCard(first);
+        // After today's card is logged, refresh streak/progress (reflects seen-today).
+        api
+          .progress()
+          .then(setProgress)
+          .catch(() => {});
       })
       .catch(() => router.replace("/onboarding"))
       .finally(() => setLoading(false));
@@ -191,6 +197,8 @@ export default function Today() {
           </ScrollView>
         )}
 
+        {progress ? <StreakBar progress={progress} /> : null}
+
         {child ? (
           <Text style={{ fontSize: font.small, color: colors.textMuted, marginTop: -spacing.sm }}>
             {titleCase(child.name)}
@@ -304,5 +312,38 @@ export default function Today() {
         </View>
       </ScrollView>
     </Screen>
+  );
+}
+
+/** Habit-loop reward: streak + tips-learned. Warm, compact, non-naggy. */
+function StreakBar({ progress }: { progress: Progress }) {
+  const { current_streak, tips_learned, seen_today } = progress;
+  const headline =
+    current_streak >= 2
+      ? `🔥 ${current_streak}-day streak`
+      : seen_today
+        ? "🔥 Streak started"
+        : "👋 Come back daily to build a streak";
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: colors.primarySoft,
+        borderRadius: radius.button,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+      }}
+    >
+      <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.primaryPress }}>
+        {headline}
+      </Text>
+      {tips_learned > 0 ? (
+        <Text style={{ fontSize: font.small, fontWeight: "700", color: colors.primaryPress }}>
+          {tips_learned} {tips_learned === 1 ? "tip" : "tips"} learned
+        </Text>
+      ) : null}
+    </View>
   );
 }

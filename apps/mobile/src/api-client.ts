@@ -182,7 +182,17 @@ export const api = {
     request<void>(`/v1/admin/broadcasts/${encodeURIComponent(id)}`, { method: "DELETE" }),
 
   adminAnalytics: () => request<Analytics>("/v1/admin/analytics"),
+
+  progress: () => request<Progress>("/v1/progress"),
 };
+
+export interface Progress {
+  current_streak: number;
+  longest_streak: number;
+  tips_learned: number;
+  days_active: number;
+  seen_today: boolean;
+}
 
 export interface AnalyticsWindow {
   active_parents: number;
