@@ -58,12 +58,16 @@ export const api = {
   bootstrap: (input: BootstrapInput) =>
     request<{ parent_id: string; onboarding_step: string }>("/v1/account/bootstrap", {
       method: "POST",
-      body: JSON.stringify({ timezone: "America/Denver", sms_opt_in: false, ...input }),
+      body: JSON.stringify({
+        timezone: deviceTimezone() ?? "America/Denver",
+        sms_opt_in: false,
+        ...input,
+      }),
     }),
 
   me: () => request<MeResponse>("/v1/me"),
 
-  updateProfile: (input: { name?: string; focus_area?: string }) =>
+  updateProfile: (input: { name?: string; focus_area?: string; timezone?: string }) =>
     request<MeResponse["parent"]>("/v1/me", {
       method: "PATCH",
       body: JSON.stringify(input),
@@ -207,6 +211,15 @@ export interface Analytics {
   last30: AnalyticsWindow;
   screens: { name: string; count: number }[];
   top_events: { name: string; count: number }[];
+}
+
+/** The device's IANA timezone (e.g. "America/New_York"), or undefined if unknown. */
+export function deviceTimezone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Fire-and-forget product-analytics event. Never throws into the UI. */

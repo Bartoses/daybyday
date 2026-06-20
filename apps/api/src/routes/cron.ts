@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { hashString } from "@daybyday/engine";
 import type { Category } from "@daybyday/schemas";
-import { selectFeedCard, localHour, type ChildRow } from "../feed/service.js";
+import { selectFeedCard, localHour, localDateKey, type ChildRow } from "../feed/service.js";
 import { sendToParent, sendBroadcastToAll } from "../push/service.js";
 import { sendEmail } from "../email/resend.js";
 import { buildWeeklyDigest } from "../email/digest.js";
@@ -32,7 +32,10 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
     }
 
     const now = new Date();
-    const today = now.toISOString().slice(0, 10);
+    // Dedupe is keyed on each parent's LOCAL day (computed per-parent below). We
+    // prefetch recent sends from yesterday-UTC onward to cover every parent's
+    // local "today" regardless of their offset.
+    const yesterdayUtc = new Date(now.getTime() - 86400000).toISOString().slice(0, 10);
 
     // Only consider parents who have at least one push subscription.
     const { data: subRows } = await app.db.from("web_push_subscriptions").select("parent_id");
@@ -56,9 +59,9 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
             .order("created_at", { ascending: true }),
           app.db
             .from("messages")
-            .select("parent_id")
+            .select("parent_id, send_date")
             .eq("message_type", "daily_push")
-            .eq("send_date", today)
+            .gte("send_date", yesterdayUtc)
             .in("parent_id", parentIds),
         ]);
 
@@ -69,8 +72,11 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
     for (const c of (children ?? []) as Array<ChildRow & { parent_id: string }>) {
       if (!firstChild.has(c.parent_id)) firstChild.set(c.parent_id, c);
     }
-    const alreadySent = new Set(
-      (sentRows ?? []).map((r) => (r as { parent_id: string }).parent_id),
+    // Key: `${parent_id}:${local_send_date}` so a parent gets one push per local day.
+    const sentByParentDay = new Set(
+      ((sentRows ?? []) as Array<{ parent_id: string; send_date: string }>).map(
+        (r) => `${r.parent_id}:${r.send_date}`,
+      ),
     );
 
     let considered = 0;
@@ -83,11 +89,12 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
         send_hour: 8,
         categories: [],
       };
-      if (!pref.daily_enabled || alreadySent.has(p.id)) continue;
+      const localToday = localDateKey(now, p.timezone);
+      if (!pref.daily_enabled || sentByParentDay.has(`${p.id}:${localToday}`)) continue;
       // Send on the first run at/after the parent's local send hour (deduped to
-      // once/day below). Using >= rather than an exact match means a skipped
-      // scheduled run — GitHub Actions cron is best-effort — just delays the tip
-      // to the next run instead of dropping it for the whole day.
+      // once per local day above). Using >= rather than an exact match means a
+      // skipped scheduled run — GitHub Actions cron is best-effort — just delays
+      // the tip to the next run instead of dropping it for the whole day.
       if (localHour(now, p.timezone) < pref.send_hour) continue;
       const child = firstChild.get(p.id);
       if (!child) continue;
@@ -95,7 +102,7 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
       considered += 1;
       const cats = (pref.categories ?? []) as Category[];
       const requestedCategory = cats.length
-        ? (cats[Math.abs(hashString(`${p.id}:${today}`)) % cats.length] ?? null)
+        ? (cats[Math.abs(hashString(`${p.id}:${localToday}`)) % cats.length] ?? null)
         : null;
 
       const card = await selectFeedCard(app.db, p.id, child, {
@@ -123,7 +130,7 @@ export async function cronRoutes(app: FastifyInstance): Promise<void> {
           message_type: "daily_push",
           channel: "push",
           send_status: "sent",
-          send_date: today,
+          send_date: localToday,
           sent_at: now.toISOString(),
         });
       }

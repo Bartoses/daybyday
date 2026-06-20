@@ -155,6 +155,21 @@ export interface SelectOptions {
   now?: Date;
 }
 
+/** Calendar date (YYYY-MM-DD) in the given IANA timezone. Used to dedupe the
+ * daily push to once per the PARENT'S local day, not the UTC day. */
+export function localDateKey(now: Date, timezone: string | undefined): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone || "America/Denver",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+  } catch {
+    return now.toISOString().slice(0, 10);
+  }
+}
+
 /** Local hour (0–23) in the given IANA timezone, for time-of-day boosting. */
 export function localHour(now: Date, timezone: string | undefined): number {
   try {

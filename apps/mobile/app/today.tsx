@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
 import type { FeedCard, MeResponse, RequestType } from "@daybyday/schemas";
-import { api, ApiError, track, type Progress } from "../src/api-client";
+import { api, ApiError, track, deviceTimezone, type Progress } from "../src/api-client";
 import { useAuth } from "../src/auth";
 import { Button, Card, Screen } from "../src/components/ui";
 import { TipCard } from "../src/components/TipCard";
@@ -49,6 +49,11 @@ export default function Today() {
       .me()
       .then(async (m) => {
         setMe(m);
+        // Keep the parent's timezone in sync with the device so daily pushes fire
+        // at their real local send-hour (handles moves/travel; fixes the old
+        // hardcoded "America/Denver" default for non-Denver users).
+        const tz = deviceTimezone();
+        if (tz && m.parent.timezone !== tz) api.updateProfile({ timezone: tz }).catch(() => {});
         const first = m.children[0] ?? null;
         setChild(first);
         if (first) await loadCard(first);
