@@ -48,6 +48,8 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       style={({ pressed }) => ({
         backgroundColor: isPrimary
           ? pressed

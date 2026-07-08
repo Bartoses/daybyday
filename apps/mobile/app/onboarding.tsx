@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
-import { router } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Image, Pressable, Text, View } from "react-native";
+import { router, Stack } from "expo-router";
 import { api, ApiError } from "../src/api-client";
 import { Button, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
@@ -89,6 +89,7 @@ export default function Onboarding() {
 
   return (
     <Screen>
+      {step === "welcome" && <Stack.Screen options={{ headerShown: false }} />}
       <View
         style={{
           gap: spacing.xl,
@@ -99,72 +100,7 @@ export default function Onboarding() {
           justifyContent: step === "welcome" ? "center" : "flex-start",
         }}
       >
-        {step === "welcome" && (
-          <View style={{ gap: spacing.xl }}>
-            <View style={{ gap: spacing.sm }}>
-              <Image source={logoMark} style={{ width: 64, height: 64 }} resizeMode="contain" />
-              <Text
-                style={{
-                  fontFamily: fonts.display,
-                  fontSize: font.display,
-                  fontWeight: "600",
-                  color: colors.text,
-                }}
-              >
-                Welcome to DaybyDay
-              </Text>
-              <Text
-                style={{
-                  fontFamily: fonts.display,
-                  fontSize: font.heading,
-                  fontWeight: "500",
-                  color: colors.text,
-                  lineHeight: 28,
-                }}
-              >
-                One age-perfect parenting tip a day — so you always know the next small thing that
-                helps.
-              </Text>
-            </View>
-
-            <View style={{ gap: spacing.md }}>
-              <ValueRow
-                emoji="🌱"
-                title="A fresh tip every day"
-                body="Bite-sized and matched to your child's exact age and stage."
-              />
-              <ValueRow
-                emoji="💬"
-                title="Ask anything, anytime"
-                body="Get a real, relevant answer about your child in seconds."
-              />
-              <ValueRow
-                emoji="📈"
-                title="It grows with them"
-                body="From newborn nights to big-kid feelings — the whole journey."
-              />
-            </View>
-
-            <View style={{ gap: spacing.sm }}>
-              <Button title="Get started" onPress={() => setStep("parent")} />
-              <Text style={{ fontSize: font.tiny, color: colors.textMuted, textAlign: "center" }}>
-                Takes about 2 minutes · Free · No spam
-              </Text>
-              <Text
-                onPress={() => router.push({ pathname: "/sign-in", params: { mode: "signin" } })}
-                style={{
-                  fontSize: font.small,
-                  color: colors.primaryPress,
-                  fontWeight: "700",
-                  textAlign: "center",
-                  marginTop: spacing.sm,
-                }}
-              >
-                Already have an account? Log in
-              </Text>
-            </View>
-          </View>
-        )}
+        {step === "welcome" && <WelcomeHero onStart={() => setStep("parent")} />}
 
         {step !== "welcome" && <Progress current={step} />}
 
@@ -184,7 +120,7 @@ export default function Onboarding() {
           <View style={{ gap: spacing.lg }}>
             <Header
               title="Tell us about your little one"
-              subtitle="Their birthdate is how we tailor every tip. Add as many children as you like."
+              subtitle="Their exact birthdate — not just an age range — is how we get today's tip right."
             />
 
             {children.length > 0 && (
@@ -206,15 +142,27 @@ export default function Onboarding() {
                       {c.name}{" "}
                       <Text style={{ fontWeight: "400", color: colors.textMuted }}>· {c.iso}</Text>
                     </Text>
-                    <Text
+                    <Pressable
                       onPress={() => removeChild(i)}
-                      style={{ color: colors.danger, fontSize: font.small }}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove ${c.name}`}
                     >
-                      Remove
-                    </Text>
+                      <Text
+                        style={{ color: colors.danger, fontSize: font.small, fontWeight: "600" }}
+                      >
+                        Remove
+                      </Text>
+                    </Pressable>
                   </View>
                 ))}
               </View>
+            )}
+
+            {children.length === 0 && (
+              <Text style={{ fontSize: font.small, color: colors.textFaint, fontStyle: "italic" }}>
+                Add your first child below to get started.
+              </Text>
             )}
 
             <View style={{ gap: spacing.md }}>
@@ -222,7 +170,12 @@ export default function Onboarding() {
               <DateSelect label="Birthdate" value={cDate} onChange={setCDate} />
             </View>
 
-            <Pressable onPress={addDraft} disabled={!draftValid}>
+            <Pressable
+              onPress={addDraft}
+              disabled={!draftValid}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
               <Text
                 style={{
                   color: draftValid ? colors.primary : colors.textMuted,
@@ -325,8 +278,21 @@ function Progress({ current }: { current: Step }) {
 function ValueRow({ emoji, title, body }: { emoji: string; title: string; body: string }) {
   return (
     <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "flex-start" }}>
-      <Text style={{ fontSize: font.title }}>{emoji}</Text>
-      <View style={{ flex: 1, gap: 1 }}>
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: radius.buttonSm,
+          backgroundColor: colors.surfaceAlt,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <Text style={{ fontSize: font.heading }}>{emoji}</Text>
+      </View>
+      <View style={{ flex: 1, gap: 1, paddingTop: 2 }}>
         <Text style={{ fontSize: font.body, fontWeight: "700", color: colors.text }}>{title}</Text>
         <Text style={{ fontSize: font.small, color: colors.textMuted, lineHeight: 20 }}>
           {body}
@@ -340,16 +306,140 @@ function Header({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <View style={{ gap: spacing.xs }}>
       <Text
+        accessibilityRole="header"
         style={{
           fontFamily: fonts.display,
           fontSize: font.title,
           fontWeight: "600",
-          color: colors.text,
+          color: colors.heading,
         }}
       >
         {title}
       </Text>
       <Text style={{ fontSize: font.body, color: colors.textMuted }}>{subtitle}</Text>
     </View>
+  );
+}
+
+function WelcomeHero({ onStart }: { onStart: () => void }) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: 1,
+      duration: 420,
+      useNativeDriver: true,
+    }).start();
+  }, [anim]);
+
+  const animatedStyle = {
+    opacity: anim,
+    transform: [
+      {
+        translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }),
+      },
+    ],
+  };
+
+  return (
+    <Animated.View style={[{ gap: spacing.xl }, animatedStyle]}>
+      <View style={{ gap: spacing.lg }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: radius.pill,
+              backgroundColor: colors.primarySoft,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Image
+              source={logoMark}
+              accessibilityLabel="DaybyDay logo"
+              style={{ width: 34, height: 34 }}
+              resizeMode="contain"
+            />
+          </View>
+          <Text
+            style={{
+              fontFamily: fonts.display,
+              fontSize: font.body,
+              fontWeight: "700",
+              color: colors.heading,
+              letterSpacing: 0.2,
+            }}
+          >
+            DaybyDay
+          </Text>
+        </View>
+
+        <Text
+          accessibilityRole="header"
+          style={{
+            fontFamily: fonts.display,
+            fontSize: 34,
+            lineHeight: 40,
+            fontWeight: "600",
+            color: colors.heading,
+          }}
+        >
+          Know exactly what your child needs — today.
+        </Text>
+        <Text
+          style={{
+            fontSize: font.heading,
+            lineHeight: 27,
+            color: colors.text,
+          }}
+        >
+          One small, age-perfect step each day. No searching, no second-guessing, no overwhelm.
+        </Text>
+      </View>
+
+      <View style={{ gap: spacing.md }}>
+        <ValueRow
+          emoji="🌱"
+          title="Matched to your child's exact age"
+          body="Not generic advice — today's tip fits their exact stage, down to the week."
+        />
+        <ValueRow
+          emoji="💬"
+          title="Ask anything, get a real answer"
+          body="Skip the late-night Google spiral. Ask Day and get something you can actually use."
+        />
+        <ValueRow
+          emoji="📈"
+          title="Grows with them, not just once"
+          body="From newborn nights to big-kid feelings — it keeps up as they change."
+        />
+      </View>
+
+      <View style={{ gap: spacing.md }}>
+        <Button title="Get started — it's free" onPress={onStart} />
+        <Text style={{ fontSize: font.small, color: colors.textMuted, textAlign: "center" }}>
+          2 minutes to set up · Your family's info is never sold or shared
+        </Text>
+        <Pressable
+          onPress={() => router.push({ pathname: "/sign-in", params: { mode: "signin" } })}
+          hitSlop={8}
+          accessibilityRole="button"
+          style={{ marginTop: spacing.xs }}
+        >
+          <Text
+            style={{
+              fontSize: font.small,
+              color: colors.heading,
+              fontWeight: "700",
+              textAlign: "center",
+              textDecorationLine: "underline",
+            }}
+          >
+            Already have an account? Log in
+          </Text>
+        </Pressable>
+      </View>
+    </Animated.View>
   );
 }
