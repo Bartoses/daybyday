@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { api, ApiError } from "../src/api-client";
 import { Button, Field, Screen } from "../src/components/ui";
@@ -101,6 +101,11 @@ export default function Onboarding() {
         {step === "welcome" && (
           <View style={{ gap: spacing.xl }}>
             <View style={{ gap: spacing.sm }}>
+              <Image
+                source={require("../assets/logo-mark.png")}
+                style={{ width: 64, height: 64 }}
+                resizeMode="contain"
+              />
               <Text
                 style={{
                   fontFamily: fonts.display,

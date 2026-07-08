@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/auth";
 import { Button, Field, Screen } from "../src/components/ui";
@@ -33,6 +33,11 @@ export default function SignIn() {
     <Screen style={{ justifyContent: "center" }}>
       <View style={{ gap: spacing.lg, maxWidth: 420, width: "100%", alignSelf: "center" }}>
         <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
+          <Image
+            source={require("../assets/logo-mark.png")}
+            style={{ width: 56, height: 56, marginBottom: spacing.xs }}
+            resizeMode="contain"
+          />
           <Text
             style={{
               fontFamily: fonts.display,

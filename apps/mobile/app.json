@@ -21,7 +21,7 @@
       "package": "com.daybyday.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#6B8F71"
+        "backgroundColor": "#FBF9F6"
       }
     },
     "web": {
@@ -31,7 +31,7 @@
       "name": "DaybyDay",
       "shortName": "DaybyDay",
       "description": "The parenting companion that grows with your family, one day at a time.",
-      "themeColor": "#6B8F71",
+      "themeColor": "#E07E5F",
       "backgroundColor": "#FBF9F6",
       "display": "standalone",
       "startUrl": "/",
