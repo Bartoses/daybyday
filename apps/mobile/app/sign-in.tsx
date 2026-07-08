@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/auth";
 import { Button, Field, Screen } from "../src/components/ui";
 import { colors, font, fonts, spacing } from "../src/theme";
+import logoMark from "../assets/logo-mark.png";
 
 export default function SignIn() {
   const { signInWithPassword, signUp } = useAuth();
@@ -34,7 +35,7 @@ export default function SignIn() {
       <View style={{ gap: spacing.lg, maxWidth: 420, width: "100%", alignSelf: "center" }}>
         <View style={{ gap: spacing.xs, marginBottom: spacing.lg }}>
           <Image
-            source={require("../assets/logo-mark.png")}
+            source={logoMark}
             style={{ width: 56, height: 56, marginBottom: spacing.xs }}
             resizeMode="contain"
           />

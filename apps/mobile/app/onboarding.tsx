@@ -6,6 +6,7 @@ import { Button, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
 import { colors, font, fonts, radius, spacing } from "../src/theme";
 import { titleCase } from "../src/format";
+import logoMark from "../assets/logo-mark.png";
 
 type Step = "welcome" | "parent" | "children" | "focus";
 const FORM_STEPS: Step[] = ["parent", "children", "focus"];
@@ -101,11 +102,7 @@ export default function Onboarding() {
         {step === "welcome" && (
           <View style={{ gap: spacing.xl }}>
             <View style={{ gap: spacing.sm }}>
-              <Image
-                source={require("../assets/logo-mark.png")}
-                style={{ width: 64, height: 64 }}
-                resizeMode="contain"
-              />
+              <Image source={logoMark} style={{ width: 64, height: 64 }} resizeMode="contain" />
               <Text
                 style={{
                   fontFamily: fonts.display,
