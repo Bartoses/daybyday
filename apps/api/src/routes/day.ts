@@ -75,6 +75,8 @@ export async function dayRoutes(app: FastifyInstance): Promise<void> {
     const now = new Date();
 
     // Free-tier daily gate (premium = unlimited; limit 0 = unlimited).
+    // Launch phase: DAY_FREE_DAILY_LIMIT defaults to 0, so every account —
+    // current and new — gets unlimited Day chat until billing ships.
     const limit = app.config.day.freeDailyLimit;
     if (limit > 0 && !isPremium(parent)) {
       const { count } = await app.db

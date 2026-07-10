@@ -28,7 +28,12 @@ export interface AppConfig {
   day: {
     apiKey: string;
     model: string;
-    /** Assistant replies a free-tier parent gets per day. 0 = unlimited. */
+    /**
+     * Assistant replies a free-tier parent gets per day. 0 = unlimited.
+     * Defaults to unlimited during the pre-monetization launch phase —
+     * every account (current and new) gets full access. Set
+     * DAY_FREE_DAILY_LIMIT to a positive number once billing ships.
+     */
     freeDailyLimit: number;
   };
   /** Transactional email (Resend) for the weekly digest. */
@@ -70,7 +75,7 @@ export function loadConfig(): AppConfig {
     day: {
       apiKey: env("ANTHROPIC_API_KEY"),
       model: env("DAY_MODEL", "claude-sonnet-4-6"),
-      freeDailyLimit: Number(env("DAY_FREE_DAILY_LIMIT", "10")),
+      freeDailyLimit: Number(env("DAY_FREE_DAILY_LIMIT", "0")),
     },
     email: {
       apiKey: env("RESEND_API_KEY"),
