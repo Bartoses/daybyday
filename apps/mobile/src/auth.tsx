@@ -31,11 +31,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     loading,
     signInWithPassword: async (email, password) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // Update state synchronously here rather than waiting on the
+      // onAuthStateChange listener — callers navigate right after this
+      // resolves, and that navigation can otherwise race the listener.
+      if (data.session) setSession(data.session);
       return { error: error?.message ?? null };
     },
     signUp: async (email, password) => {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (data.session) setSession(data.session);
       return { error: error?.message ?? null };
     },
     signOut: async () => {

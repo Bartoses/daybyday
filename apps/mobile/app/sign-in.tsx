@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../src/auth";
@@ -7,7 +7,7 @@ import { colors, font, fonts, spacing } from "../src/theme";
 import logoMark from "../assets/logo-mark.png";
 
 export default function SignIn() {
-  const { signInWithPassword, signUp } = useAuth();
+  const { session, signInWithPassword, signUp } = useAuth();
   const params = useLocalSearchParams<{ mode?: string }>();
   const [mode, setMode] = useState<"signin" | "signup">(
     params.mode === "signin" ? "signin" : "signup",
@@ -17,17 +17,21 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Navigate off this screen once the session context actually reflects a
+  // signed-in user, rather than right after submit()'s promise resolves —
+  // navigating immediately could race the context update and bounce back
+  // here via index.tsx's own "no session" redirect.
+  useEffect(() => {
+    if (session) router.replace("/");
+  }, [session]);
+
   async function submit() {
     setError(null);
     setBusy(true);
     const fn = mode === "signin" ? signInWithPassword : signUp;
     const { error: err } = await fn(email.trim(), password);
     setBusy(false);
-    if (err) {
-      setError(err);
-      return;
-    }
-    router.replace("/");
+    if (err) setError(err);
   }
 
   return (

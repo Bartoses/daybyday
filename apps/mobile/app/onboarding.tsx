@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, Image, Pressable, Text, View } from "react-native";
 import { router, Stack } from "expo-router";
 import { api, ApiError } from "../src/api-client";
+import { useAuth } from "../src/auth";
 import { Button, Field, Screen } from "../src/components/ui";
 import { DateSelect, EMPTY_DATE, toIsoDate, type DateParts } from "../src/components/form";
 import { colors, font, fonts, radius, spacing } from "../src/theme";
@@ -9,6 +10,7 @@ import { titleCase } from "../src/format";
 import logoMark from "../assets/logo-mark.png";
 
 type Step = "welcome" | "parent" | "children" | "focus";
+const STEP_ORDER: Step[] = ["welcome", "parent", "children", "focus"];
 const FORM_STEPS: Step[] = ["parent", "children", "focus"];
 
 const FOCUS_OPTIONS: Array<{
@@ -27,6 +29,7 @@ interface DraftChild {
 }
 
 export default function Onboarding() {
+  const { session } = useAuth();
   const [step, setStep] = useState<Step>("welcome");
   const [name, setName] = useState("");
   const [focus, setFocus] = useState<(typeof FOCUS_OPTIONS)[number]["key"]>("daily_guidance");
@@ -52,6 +55,22 @@ export default function Onboarding() {
 
   function removeChild(i: number) {
     setChildren(children.filter((_, idx) => idx !== i));
+  }
+
+  function goBack() {
+    const idx = STEP_ORDER.indexOf(step);
+    const prev = idx > 0 ? STEP_ORDER[idx - 1] : undefined;
+    if (prev) setStep(prev);
+  }
+
+  function handleGetStarted() {
+    // No account yet (e.g. this screen was opened directly, skipping sign-up)
+    // — create one first so the rest of the form has somewhere to save to.
+    if (!session) {
+      router.push("/sign-in");
+      return;
+    }
+    setStep("parent");
   }
 
   function continueFromChildren() {
@@ -100,9 +119,9 @@ export default function Onboarding() {
           justifyContent: step === "welcome" ? "center" : "flex-start",
         }}
       >
-        {step === "welcome" && <WelcomeHero onStart={() => setStep("parent")} />}
+        {step === "welcome" && <WelcomeHero onStart={handleGetStarted} />}
 
-        {step !== "welcome" && <Progress current={step} />}
+        {step !== "welcome" && <Progress current={step} onBack={goBack} />}
 
         {step === "parent" && (
           <View style={{ gap: spacing.lg }}>
@@ -251,13 +270,26 @@ export default function Onboarding() {
   );
 }
 
-function Progress({ current }: { current: Step }) {
+function Progress({ current, onBack }: { current: Step; onBack: () => void }) {
   const idx = FORM_STEPS.indexOf(current);
   return (
     <View style={{ gap: spacing.sm }}>
-      <Text style={{ fontSize: font.tiny, color: colors.textMuted, fontWeight: "600" }}>
-        Step {idx + 1} of {FORM_STEPS.length}
-      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+        <Pressable
+          onPress={onBack}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={{ marginLeft: -spacing.xs, padding: spacing.xs }}
+        >
+          <Text style={{ fontSize: font.small, color: colors.textMuted, fontWeight: "700" }}>
+            ‹ Back
+          </Text>
+        </Pressable>
+        <Text style={{ fontSize: font.tiny, color: colors.textMuted, fontWeight: "600" }}>
+          Step {idx + 1} of {FORM_STEPS.length}
+        </Text>
+      </View>
       <View style={{ flexDirection: "row", gap: spacing.xs }}>
         {FORM_STEPS.map((_, i) => (
           <View
