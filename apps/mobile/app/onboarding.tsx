@@ -10,7 +10,6 @@ import { titleCase } from "../src/format";
 import logoMark from "../assets/logo-mark.png";
 
 type Step = "welcome" | "parent" | "children" | "focus";
-const STEP_ORDER: Step[] = ["welcome", "parent", "children", "focus"];
 const FORM_STEPS: Step[] = ["parent", "children", "focus"];
 
 const FOCUS_OPTIONS: Array<{
@@ -29,7 +28,7 @@ interface DraftChild {
 }
 
 export default function Onboarding() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const [step, setStep] = useState<Step>("welcome");
   const [name, setName] = useState("");
   const [focus, setFocus] = useState<(typeof FOCUS_OPTIONS)[number]["key"]>("daily_guidance");
@@ -57,15 +56,31 @@ export default function Onboarding() {
     setChildren(children.filter((_, idx) => idx !== i));
   }
 
+  // The welcome hero is only for people with no account yet. If a session
+  // already exists — right after creating one, or on any return visit while
+  // signed in but not yet onboarded — skip straight to the form instead of
+  // showing "Get started" again. Previously "Get started" branched on
+  // session at click time, which made it inconsistent: whichever screen you
+  // landed on depended on whatever stale session happened to be in the
+  // browser, not on what the button visibly offered.
+  useEffect(() => {
+    if (!authLoading && session && step === "welcome") setStep("parent");
+  }, [authLoading, session, step]);
+
   function goBack() {
-    const idx = STEP_ORDER.indexOf(step);
-    const prev = idx > 0 ? STEP_ORDER[idx - 1] : undefined;
+    // Back only moves within the form (parent/children/focus). Going back to
+    // "welcome" from the first form step isn't meaningful once signed in —
+    // the auto-advance effect above would just bounce straight back to
+    // "parent", making the button look broken.
+    const idx = FORM_STEPS.indexOf(step);
+    const prev = idx > 0 ? FORM_STEPS[idx - 1] : undefined;
     if (prev) setStep(prev);
   }
 
   function handleGetStarted() {
-    // No account yet (e.g. this screen was opened directly, skipping sign-up)
-    // — create one first so the rest of the form has somewhere to save to.
+    // No account yet — create one first so the rest of the form has
+    // somewhere to save to. (If a session already existed, the effect above
+    // would already have skipped this screen before it could be clicked.)
     if (!session) {
       router.push("/sign-in");
       return;
@@ -279,17 +294,19 @@ function Progress({ current, onBack }: { current: Step; onBack: () => void }) {
   return (
     <View style={{ gap: spacing.sm }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
-        <Pressable
-          onPress={onBack}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={{ marginLeft: -spacing.xs, padding: spacing.xs }}
-        >
-          <Text style={{ fontSize: font.small, color: colors.textMuted, fontWeight: "700" }}>
-            ‹ Back
-          </Text>
-        </Pressable>
+        {idx > 0 && (
+          <Pressable
+            onPress={onBack}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            style={{ marginLeft: -spacing.xs, padding: spacing.xs }}
+          >
+            <Text style={{ fontSize: font.small, color: colors.textMuted, fontWeight: "700" }}>
+              ‹ Back
+            </Text>
+          </Pressable>
+        )}
         <Text style={{ fontSize: font.tiny, color: colors.textMuted, fontWeight: "600" }}>
           Step {idx + 1} of {FORM_STEPS.length}
         </Text>
