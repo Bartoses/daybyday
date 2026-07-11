@@ -41,7 +41,11 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-title" content="DaybyDay" />
         <meta name="mobile-web-app-capable" content="yes" />
 
-        {/* Disable body scrolling on web so the app behaves like a native shell. */}
+        {/* Provides the html/body/#root flex + height chain the app's
+            flex:1 screens rely on to fill the viewport. It also sets
+            body { overflow: hidden }, which blocks real content overflow
+            *and* Safari's pull-to-refresh — BASE_CSS below overrides just
+            that property back to scrollable. */}
         <ScrollViewStyleReset />
 
         <style dangerouslySetInnerHTML={{ __html: BASE_CSS }} />
@@ -56,6 +60,7 @@ export default function Root({ children }: PropsWithChildren) {
 
 const BASE_CSS = `
 html, body { background-color: #E7E2D9; font-family: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+body { overflow-y: auto; }
 `;
 
 const SW_REGISTER = `

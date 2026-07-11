@@ -16,14 +16,18 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  // Navigate off this screen once the session context actually reflects a
-  // signed-in user, rather than right after submit()'s promise resolves —
-  // navigating immediately could race the context update and bounce back
-  // here via index.tsx's own "no session" redirect.
+  // Navigate off this screen once a sign-in/sign-up submitted *on this
+  // screen* actually lands in the session context — not just because a
+  // session already existed when the screen mounted (e.g. someone with an
+  // unfinished signup tapping "Already have an account?"), which would
+  // otherwise bounce them straight back here in a loop. Waiting for the
+  // context update (rather than navigating right after submit()'s promise
+  // resolves) also avoids racing the AuthProvider's own state update.
   useEffect(() => {
-    if (session) router.replace("/");
-  }, [session]);
+    if (submitted && session) router.replace("/");
+  }, [submitted, session]);
 
   async function submit() {
     setError(null);
@@ -31,7 +35,11 @@ export default function SignIn() {
     const fn = mode === "signin" ? signInWithPassword : signUp;
     const { error: err } = await fn(email.trim(), password);
     setBusy(false);
-    if (err) setError(err);
+    if (err) {
+      setError(err);
+      return;
+    }
+    setSubmitted(true);
   }
 
   return (
