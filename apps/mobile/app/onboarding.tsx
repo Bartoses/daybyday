@@ -100,7 +100,11 @@ export default function Onboarding() {
       await api.completeOnboarding();
       router.replace("/today");
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Something went wrong. Try again.");
+      if (e instanceof ApiError && e.status === 401) {
+        setError("Your session expired. Please sign in again to finish setting up.");
+      } else {
+        setError(e instanceof ApiError ? e.message : "Something went wrong. Try again.");
+      }
     } finally {
       setBusy(false);
     }

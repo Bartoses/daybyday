@@ -26,7 +26,7 @@ class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: RequestInit, retrying = false): Promise<T> {
   const t = await token();
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
@@ -41,6 +41,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
   const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
+    // A locally-fresh token can still be rejected server-side (clock skew, a
+    // tab backgrounded across its expiry, etc.) — a long multi-step form
+    // like onboarding is exactly where that gap shows up. Force one refresh
+    // and retry before surfacing the error.
+    if (res.status === 401 && !retrying) {
+      const { data } = await supabase.auth.refreshSession();
+      if (data.session) return request<T>(path, init, true);
+    }
     const err = (body.error ?? {}) as { code?: string; message?: string };
     throw new ApiError(res.status, err.code ?? "INTERNAL", err.message ?? `API ${res.status}`);
   }
